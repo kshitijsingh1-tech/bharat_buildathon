@@ -99,17 +99,51 @@ git merge <branch_name>
 
 ---
 
-## 4. Troubleshooting & Windows Credentials
+## 4. Troubleshooting & Common Terminal Errors
 
-### Delete Stored Windows Git Credentials
-If Git is trying to authenticate with a wrong GitHub account cached on Windows, run this command to remove it from Windows Credential Manager:
-```cmd
-cmdkey /delete:git:https://github.com
+### 1. HTTP 403: Permission Denied (`Permission denied to <username>`)
+**Error:** `remote: Permission to owner/repo.git denied to username` / `fatal: unable to access ... 403`
+**Causes & Solutions:**
+* **Missing Collaborator Access:** The repository owner (e.g. `kshitijsingh1-tech`) has not added your account (`manthan-h`) as a collaborator with write access.
+  * **Solution:** The repo owner must go to **GitHub Repo -> Settings -> Collaborators -> Add people** and add `manthan-h`. You must then **accept the repository invitation** sent to your email or GitHub notifications.
+* **Cached Windows Credentials Mismatch:** Windows Credential Manager is sending saved credentials for a different GitHub account or an expired Personal Access Token.
+  * **Solution:** Delete the cached GitHub credentials from Windows terminal:
+    ```cmd
+    cmdkey /delete:git:https://github.com
+    ```
+    Or open **Control Panel -> Credential Manager -> Windows Credentials**, look for `git:https://github.com` and click **Remove**.
+  * On your next `git push`, GitHub will prompt you to authenticate again via browser or Personal Access Token (PAT).
+
+### 2. `nothing to commit, working tree clean`
+**Error:** Running `git commit -m "..."` produces no commit because no modified/new files were staged.
+**Solution:** You must stage files first before committing:
+```bash
+git add .
+git commit -m "Your commit message"
 ```
 
-### List Stored Credentials
+### 3. Command Not Found / Typo (`gti : The term 'gti' is not recognized`)
+**Error:** Misspelled command in terminal (e.g. typing `gti push` instead of `git push`).
+**Solution:** Check spelling and re-run:
+```bash
+git push -u origin main
+```
+
+### 4. Renaming Local Branch from `master` to `main`
+**Command:** Rename local branch to `main` and set up remote tracking:
+```bash
+git branch -M main
+git push -u origin main
+```
+
+### 5. Managing Stored Windows Credentials
+**List Stored Credentials:**
 ```cmd
 cmdkey /list
+```
+**Delete Stored GitHub Credentials:**
+```cmd
+cmdkey /delete:git:https://github.com
 ```
 
 ---
