@@ -136,7 +136,42 @@ git branch -M main
 git push -u origin main
 ```
 
-### 5. Managing Stored Windows Credentials
+### 5. Changing Git & GitHub User from Terminal
+
+#### A. Change GitHub Authentication Account (Fix 403 Permission Denied)
+To switch which GitHub account pushes to remote repositories:
+
+1. **Delete saved Windows credentials:**
+   ```cmd
+   cmdkey /delete:git:https://github.com
+   ```
+2. **Force Git to prompt for the desired GitHub username:**
+   ```bash
+   git remote set-url origin https://YOUR_GITHUB_USERNAME@github.com/kshitijsingh1-tech/bharat_buildathon.git
+   ```
+3. **Push to trigger re-authentication:**
+   ```bash
+   git push -u origin main
+   ```
+   *(A browser sign-in window or Personal Access Token (PAT) prompt will pop up allowing you to log in as `YOUR_GITHUB_USERNAME`.)*
+
+#### B. Change Commit Author Info (Name & Email)
+To change the name and email attached to your local commits:
+```bash
+# Change for current repository only:
+git config user.name "Your New Name"
+git config user.email "your_email@example.com"
+
+# Change globally for all repositories:
+git config --global user.name "Your New Name"
+git config --global user.email "your_email@example.com"
+
+# Check current configured user:
+git config user.name
+git config user.email
+```
+
+### 6. Managing Stored Windows Credentials
 **List Stored Credentials:**
 ```cmd
 cmdkey /list
