@@ -64,6 +64,7 @@ Thumbs.db
 !.vscode/extensions.json
 *.swp
 *.swo
+command_helpbook.md
 
 # v0 Sandbox & Vercel
 __v0_runtime_loader.js
