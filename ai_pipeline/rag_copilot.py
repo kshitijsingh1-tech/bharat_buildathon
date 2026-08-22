@@ -2,8 +2,8 @@
 Sarthi AI Pipeline - Multilingual Conversational RAG Copilot
 Features:
 1. Conversational Greeting & Intent Detection (Friendly warm welcome for Hello / Hi / Namaste)
-2. Central Govt vs State Govt Scheme Bifurcation
-3. Intelligent Profiling System (Asks for Age, Caste/Category, Region/State, Household Income)
+2. Profiling Questions FIRST (Asks Age, Caste/Category, State/Region, Income AT THE TOP of responses)
+3. Central Govt vs State Govt Scheme Bifurcation
 4. Clean WhatsApp-Professional Layout (Mid-dots '•', hyphens '-', emoji-free, clean line breaks)
 5. Multilingual Translation Compatibility
 6. Docs + CSC Locator Integration
@@ -36,7 +36,6 @@ class RAGCopilot:
         Determines if the citizen's input is a general conversational greeting or introductory message.
         """
         msg = user_message.strip().lower()
-        # Remove punctuation
         msg_clean = re.sub(r'[^\w\s]', '', msg)
         
         greetings = {
@@ -118,7 +117,7 @@ class RAGCopilot:
     ) -> Optional[str]:
         """
         Synthesizes grounded RAG response using Groq LLM (groq/compound-mini).
-        Enforces Central vs State Scheme bifurcation, mid-dot bullets '•', clean line breaks, and zero emojis.
+        Enforces placing missing profiling questions AT THE VERY TOP before listing schemes.
         """
         if not self.client:
             return None
@@ -133,23 +132,24 @@ class RAGCopilot:
             missing_questions_prompt = ""
             if missing_attrs:
                 missing_questions_prompt = (
-                    "INTELLIGENT PROFILING INSTRUCTION:\n"
-                    "The user's query requires specific citizen details. Politely ask follow-up questions to gather these missing parameters:\n" +
-                    "\n".join([f"• What is your {item}?" for item in missing_attrs]) + "\n\n"
+                    "CRITICAL ORDER RULE:\n"
+                    "YOU MUST PLACE THE FOLLOWING PROFILING QUESTIONS AT THE VERY TOP OF YOUR RESPONSE BEFORE ANY SCHEME RECOMMENDATIONS:\n"
+                    "To narrow down exact eligibility for your profile, please clarify:\n" +
+                    "\n".join([f"• What is your {item}?" for item in missing_attrs]) + "\n\n---\n"
                 )
 
             system_prompt = (
                 "You are Sarthi Benefits Copilot, an expert AI assistant for Indian Government Welfare Schemes.\n"
                 f"Respond in language code '{language}' (or match the user's input language naturally).\n"
                 "Answer accurately using ONLY the provided scheme context below.\n"
-                f"{simplicity_instruction}\n"
                 f"{missing_questions_prompt}\n"
+                f"{simplicity_instruction}\n"
                 "STRICT FORMATTING RULES:\n"
                 "1. DO NOT USE ANY EMOJIS (No icons, flags, money symbols, or smileys).\n"
-                "2. Clearly bifurcate options into 'Central Govt Schemes' and 'State Govt Schemes'.\n"
-                "3. Use clean mid-dot bullet points starting with '• ' for details.\n"
-                "4. Include Scheme Name, Department, Financial Benefit, and Required Documents.\n"
-                "5. Include a brief Eligibility Summary.\n"
+                "2. IF PROFILING QUESTIONS ARE APPLICABLE, PUT THEM AT THE VERY TOP FIRST.\n"
+                "3. Clearly bifurcate options into 'Central Govt Schemes' and 'State Govt Schemes'.\n"
+                "4. Use clean mid-dot bullet points starting with '• ' for details.\n"
+                "5. Include Scheme Name, Department, Financial Benefit, and Required Documents.\n"
                 "6. Always end with Trust Signals (Official Source URL & Last Verified Date)."
             )
 
@@ -199,9 +199,9 @@ class RAGCopilot:
     ) -> Dict[str, Any]:
         """
         Processes citizen query and returns rich RAG response with:
+        - Profiling Questions FIRST at the top of responses
         - Conversational greeting detection for simple 'Hello', 'Hi', 'Namaste'
         - Central Govt vs State Govt Scheme Bifurcation
-        - Intelligent Profiling Follow-up Questions (Age, Caste, State/Region, Income)
         - Professional layout (Mid-dots '•', clean spacing, emoji-free)
         - Multilingual translation compatibility
         - Docs + CSC Locator
@@ -233,7 +233,7 @@ class RAGCopilot:
 
         if not search_results:
             return {
-                "reply": "Sarthi Benefits Copilot\n\nI could not find a direct policy match for your query.\n\nTo narrow down exact eligibility for your profile, please clarify:\n• What is your Age (or date of birth)?\n• What is your Category / Caste (General / SC / ST / OBC / EWS)?\n• What is your State of Residence / Domicile Region?\n• What is your Annual Family Household Income?",
+                "reply": "Sarthi Benefits Copilot\n\nTo narrow down exact eligibility for your profile, please clarify:\n• What is your Age (or date of birth)?\n• What is your Category / Caste (General / SC / ST / OBC / EWS)?\n• What is your State of Residence / Domicile Region?\n• What is your Annual Family Household Income?\n\nI could not find a direct policy match for your query.",
                 "suggestedSchemes": [],
                 "citations": [],
                 "cscCenters": []
@@ -271,9 +271,15 @@ class RAGCopilot:
         if groq_reply:
             reply_text = groq_reply
         else:
-            # Fallback Structured Response matching Professional Layout
+            # Fallback Structured Response putting Profiling Questions FIRST
             lines = ["Sarthi Benefits Copilot\n"]
             
+            if missing_attrs:
+                lines.append("To narrow down exact eligibility for your profile, please clarify:")
+                for item in missing_attrs:
+                    lines.append(f"  • What is your {item}?")
+                lines.append("\n---\n")
+
             if central_list:
                 c = central_list[0]
                 lines.append("Central Govt Schemes:")
@@ -290,12 +296,7 @@ class RAGCopilot:
                 lines.append(f"  • Financial Benefit: {s['benefit']}")
                 lines.append(f"  • Required Documents: {', '.join(s['documents'])}\n")
 
-            lines.append(f"Eligibility Summary: {top_scheme['summary']}\n")
-
-            if missing_attrs:
-                lines.append("To narrow down exact eligibility for your profile, please clarify:")
-                for item in missing_attrs:
-                    lines.append(f"  • What is your {item}?")
+            lines.append(f"Eligibility Summary: {top_scheme['summary']}")
 
             reply_text = "\n".join(lines)
 
