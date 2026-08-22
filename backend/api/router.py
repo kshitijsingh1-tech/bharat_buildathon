@@ -141,40 +141,49 @@ def send_twilio_alert(req: TwilioAlertRequest):
     )
 
 
+import logging
+logger = logging.getLogger("uvicorn.error")
+
 @router.api_route("/twilio/webhook", methods=["GET", "POST"])
-async def twilio_incoming_webhook(request: Request, Body: Optional[str] = Form(None), From: Optional[str] = Form(None)):
+async def twilio_incoming_webhook(request: Request):
     """
     Twilio HTTP Webhook Callback endpoint for incoming SMS/WhatsApp queries.
     Parses both form-data and raw query parameters and returns XML TwiML response.
     """
-    msg_body = Body or ""
-    sender = From or ""
+    msg_body = ""
+    sender = ""
 
-    # If form data missing, attempt parsing form or query params from raw request
-    if not msg_body:
-        try:
-            form_data = await request.form()
-            msg_body = form_data.get("Body", "")
-            sender = form_data.get("From", "")
-        except Exception:
-            pass
+    try:
+        form_data = await request.form()
+        msg_body = form_data.get("Body") or form_data.get("body") or ""
+        sender = form_data.get("From") or form_data.get("from") or ""
+    except Exception:
+        pass
 
     if not msg_body:
         msg_body = request.query_params.get("Body", "Hi")
     if not sender:
         sender = request.query_params.get("From", "WhatsApp Citizen")
 
-    print("\n" + "="*75, flush=True)
-    print(f"📱 [TWILIO WHATSAPP / SMS RECEIVED]", flush=True)
-    print(f"   👤 From: {sender}", flush=True)
-    print(f"   💬 Query: {msg_body}", flush=True)
-    print("="*75, flush=True)
+    log_banner = (
+        f"\n{'='*75}\n"
+        f"📱 [TWILIO WHATSAPP / SMS RECEIVED]\n"
+        f"   👤 From: {sender}\n"
+        f"   💬 Query: {msg_body}\n"
+        f"{'='*75}"
+    )
+    logger.info(log_banner)
+    print(log_banner, flush=True)
 
     twiml_xml = twilio_service.process_incoming_query(incoming_body=msg_body, sender_number=sender)
 
-    print("🤖 [SARTHI RAG RESPONSE GENERATED]", flush=True)
-    print(twiml_xml, flush=True)
-    print("="*75 + "\n", flush=True)
+    resp_banner = (
+        f"🤖 [SARTHI RAG RESPONSE GENERATED]\n"
+        f"{twiml_xml}\n"
+        f"{'='*75}\n"
+    )
+    logger.info(resp_banner)
+    print(resp_banner, flush=True)
     sys.stdout.flush()
 
     return Response(content=twiml_xml, media_type="application/xml")
