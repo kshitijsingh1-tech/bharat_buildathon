@@ -135,6 +135,8 @@ python test_system.py
 - **Test 7 (FastAPI App)**: All 34 backend API endpoints mounted: PASSED
 
 ---
-
+#future scope 
+ ** add telegram and other channels.
+ 
 ## License
 MIT License. Built for Bharat Buildathon 2026.
