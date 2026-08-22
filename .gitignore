@@ -1,51 +1,15 @@
-# Dependencies
-node_modules/
-/jspm_packages/
-venv/
-.venv/
-env/
-ENV/
+# v0 sandbox internal files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
 
-# Build and Outputs
-dist/
-tmp/
-out/
-build/
-.next/
-.nuxt/
-.cache/
-
-# IDEs and Editors
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.swp
-
-# OS Files
-Thumbs.db
-db.files
-.DS_Store
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment and Secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Environment variables
 .env*.local
-*.pem
-*.key
 
-# Helpbooks
-*helpbook.md
-
+# Common ignores
+node_modules
+.next/
+.DS_Store
