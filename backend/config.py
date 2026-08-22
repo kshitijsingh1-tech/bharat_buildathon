@@ -2,6 +2,10 @@
 Sarthi Backend Configuration Settings
 """
 import os
+from dotenv import load_dotenv
+
+# Load .env FIRST before any os.getenv calls
+load_dotenv()
 
 class Settings:
     PROJECT_NAME: str = "Sarthi - AI Government Benefits Copilot Backend"
