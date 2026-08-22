@@ -1,4 +1,7 @@
+'use client'
+
 import { cn } from '@/lib/utils'
+import { useUiPreferences } from '@/components/ui-preferences'
 
 export function SarthiMark({ className }: { className?: string }) {
   return (
@@ -33,6 +36,7 @@ export function SarthiLogo({
   className?: string
   showTagline?: boolean
 }) {
+  const { language } = useUiPreferences()
   return (
     <span className={cn('flex items-center gap-2.5', className)}>
       <SarthiMark />
@@ -42,7 +46,7 @@ export function SarthiLogo({
         </span>
         {showTagline && (
           <span className="mt-0.5 text-[0.6875rem] font-medium text-muted-foreground">
-            Government Benefits Copilot
+            {language === 'hi' ? 'सरकारी लाभ सहायक' : 'Government Benefits Copilot'}
           </span>
         )}
       </span>

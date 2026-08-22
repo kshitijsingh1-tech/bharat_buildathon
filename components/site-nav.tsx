@@ -2,18 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Bell,
   Compass,
   FileText,
   Home,
   LayoutGrid,
-  Mic,
+  Moon,
   Sparkles,
+  Sun,
   User,
-  Menu,
-  X,
   ClipboardList,
   ScanSearch,
 } from 'lucide-react'
@@ -22,6 +21,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SarthiLogo, SarthiMark } from '@/components/sarthi-logo'
 import { cn } from '@/lib/utils'
+import { useUiPreferences } from '@/components/ui-preferences'
+import { PortalGuide } from '@/components/portal-guide'
 
 const primaryNav = [
   { href: '/', label: 'Home' },
@@ -33,22 +34,6 @@ const primaryNav = [
   { href: '/alerts', label: 'Alerts' },
 ]
 
-const moreNav = [
-  { href: '/profile', label: 'Profile' },
-  { href: '/family', label: 'My Family' },
-  { href: '/simulator', label: 'What If? Simulator' },
-  { href: '/readiness', label: 'Application Readiness' },
-  { href: '/guide', label: 'Application Guide' },
-  { href: '/compare', label: 'Compare Schemes' },
-  { href: '/life-events', label: 'Life Events' },
-  { href: '/updates', label: 'Scheme Updates' },
-  { href: '/help-near-me', label: 'Help Near You' },
-  { href: '/trust', label: 'Trust & Sources' },
-  { href: '/conflicts', label: 'Source Conflicts' },
-  { href: '/settings', label: 'Settings & Privacy' },
-  { href: '/admin', label: 'Admin Dashboard' },
-]
-
 const mobileNav = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Compass },
@@ -57,10 +42,49 @@ const mobileNav = [
   { href: '/profile', label: 'Profile', icon: User },
 ]
 
+const hindiLabels: Record<string, string> = {
+  Home: 'होम',
+  'Explore Schemes': 'योजनाएँ खोजें',
+  'My Benefits': 'मेरे लाभ',
+  Eligibility: 'पात्रता',
+  Documents: 'दस्तावेज़',
+  Applications: 'आवेदन',
+  Alerts: 'सूचनाएँ',
+  Explore: 'खोजें',
+  Benefits: 'लाभ',
+  Profile: 'प्रोफ़ाइल',
+  'Ask Sarthi': 'सारथी से पूछें',
+  'My Family': 'मेरा परिवार',
+  'What If? Simulator': 'परिस्थिति सिम्युलेटर',
+  'Application Readiness': 'आवेदन तैयारी',
+  'Application Guide': 'आवेदन मार्गदर्शिका',
+  'Compare Schemes': 'योजनाओं की तुलना',
+  'Life Events': 'जीवन की घटनाएँ',
+  'Scheme Updates': 'योजना अपडेट',
+  'Help Near You': 'पास में सहायता',
+  'Trust & Sources': 'विश्वास और स्रोत',
+  'Source Conflicts': 'स्रोत मतभेद',
+  'Settings & Privacy': 'सेटिंग्स और गोपनीयता',
+  'Admin Dashboard': 'प्रशासन डैशबोर्ड',
+}
+
 export function SiteNav() {
   const pathname = usePathname()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [lang, setLang] = useState<'EN' | 'हिं'>('EN')
+  const [guideOpen, setGuideOpen] = useState(false)
+  const [fontScale, setFontScale] = useState<1 | 1.15 | 1.3>(1)
+  const { language, setLanguage, theme, toggleTheme } = useUiPreferences()
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem('sarthi-font-scale')
+    if (stored === '1.15' || stored === '1.3') setFontScale(Number(stored) as 1.15 | 1.3)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontScale * 100}%`
+    window.localStorage.setItem('sarthi-font-scale', String(fontScale))
+  }, [fontScale])
+  const label = (english: string) =>
+    language === 'hi' ? hindiLabels[english] ?? english : english
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -101,7 +125,7 @@ export function SiteNav() {
                     : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground',
                 )}
               >
-                {item.label}
+                {label(item.label)}
               </Link>
             ))}
           </nav>
@@ -116,12 +140,12 @@ export function SiteNav() {
                 <button
                   key={l}
                   type="button"
-                  onClick={() => setLang(l)}
-                  aria-pressed={lang === l}
+                  onClick={() => setLanguage(l === 'EN' ? 'en' : 'hi')}
+                  aria-pressed={language === (l === 'EN' ? 'en' : 'hi')}
                   className={cn(
                     'min-w-9 rounded-md px-2 py-1 text-xs font-semibold transition-colors',
                     l === 'हिं' && 'font-devanagari',
-                    lang === l
+                    language === (l === 'EN' ? 'en' : 'hi')
                       ? 'bg-card text-foreground shadow-xs'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
@@ -131,13 +155,25 @@ export function SiteNav() {
               ))}
             </div>
 
+            <button
+              type="button"
+              onClick={() => setFontScale(current => current === 1 ? 1.15 : current === 1.15 ? 1.3 : 1)}
+              className="hidden sm:inline-flex items-center justify-center size-9 rounded-lg text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              aria-label={language === 'hi' ? 'फ़ॉन्ट आकार बदलें' : 'Change font size'}
+              title={language === 'hi' ? 'फ़ॉन्ट आकार बदलें' : 'Change font size'}
+            >
+              {fontScale === 1 ? 'A' : fontScale === 1.15 ? 'A+' : 'A++'}
+            </button>
+
             <Button
               variant="ghost"
               size="icon-lg"
               className="hidden sm:inline-flex"
-              aria-label="Voice input"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
             >
-              <Mic />
+              {theme === 'dark' ? <Sun /> : <Moon />}
             </Button>
 
             <Button
@@ -151,70 +187,8 @@ export function SiteNav() {
               <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-saffron ring-2 ring-background" />
             </Button>
 
-            <Button
-              size="lg"
-              className="gap-1.5"
-              render={<Link href="/chat" />}
-            >
-              <Sparkles className="size-3.5" />
-              <span className="hidden sm:inline">Ask Sarthi</span>
-              <span className="sm:hidden">Ask</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon-lg"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            >
-              {menuOpen ? <X /> : <Menu />}
-            </Button>
           </div>
         </div>
-
-        {menuOpen && (
-          <div className="border-t border-border/70 bg-card">
-            <div className="mx-auto grid w-full max-w-[1400px] gap-6 px-4 py-6 sm:px-6 md:grid-cols-3">
-              <div>
-                <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Citizen
-                </p>
-                <ul className="flex flex-col gap-0.5">
-                  {primaryNav.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => setMenuOpen(false)}
-                        className="block rounded-lg px-2.5 py-2 text-sm font-medium text-foreground hover:bg-secondary"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="md:col-span-2">
-                <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  All pages
-                </p>
-                <ul className="grid gap-0.5 sm:grid-cols-2">
-                  {moreNav.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => setMenuOpen(false)}
-                        className="block rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Mobile bottom nav */}
@@ -237,7 +211,7 @@ export function SiteNav() {
                   )}
                 >
                   <Icon className="size-5" />
-                  {item.label}
+                  {label(item.label)}
                 </Link>
               </li>
             )
@@ -245,13 +219,19 @@ export function SiteNav() {
         </ul>
       </nav>
 
-      <Link
-        href="/chat"
-        aria-label="Ask Sarthi with voice"
-        className="fixed right-4 bottom-20 z-50 flex size-14 items-center justify-center rounded-full bg-saffron text-primary-foreground shadow-lg shadow-saffron/30 transition-transform active:scale-95 md:hidden"
-      >
-        <Mic className="size-6" />
-      </Link>
+      <div className="fixed right-4 bottom-20 z-50 md:right-7 md:bottom-7">
+        {guideOpen && <div className="absolute right-0 bottom-18 mb-3"><PortalGuide onClose={() => setGuideOpen(false)} /></div>}
+        <button
+          type="button"
+          onClick={() => setGuideOpen(true)}
+          aria-expanded={guideOpen}
+          aria-label={language === 'hi' ? 'सारथी पोर्टल गाइड खोलें' : 'Open Sarthi Portal Guide'}
+          className="animate-sarthi-beat flex h-14 items-center gap-2 rounded-full bg-saffron px-4 text-sm font-bold text-primary-foreground shadow-xl shadow-saffron/40 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-saffron/40 active:scale-95 md:h-15"
+        >
+          <Sparkles className="size-5" />
+          <span>{language === 'hi' ? 'सारथी गाइड' : 'Sarthi Guide'}</span>
+        </button>
+      </div>
     </>
   )
 }
@@ -290,67 +270,68 @@ export function PageHeader({
 }
 
 export function DemoDataNote({ className }: { className?: string }) {
+  const { language } = useUiPreferences()
   return (
     <Badge
       variant="outline"
       className="gap-1.5 border-dashed bg-card/60 text-[0.6875rem] text-muted-foreground"
     >
       <ScanSearch className="size-3" />
-      Sample data for demonstration
+      {language === 'hi' ? 'प्रदर्शन के लिए नमूना डेटा' : 'Sample data for demonstration'}
     </Badge>
   )
 }
 
 export function AppFooter() {
+  const { language } = useUiPreferences()
+  const hi = language === 'hi'
+
   return (
     <footer className="mt-16 border-t border-border bg-card/40">
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 px-4 py-10 sm:px-8 lg:px-12 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
           <SarthiLogo />
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Sarthi helps you understand government benefits. Government sources
-            define the rules — Sarthi explains them and always shows where the
-            answer came from.
+            {hi ? 'सारथी आपको सरकारी लाभों को समझने में मदद करता है। सरकारी स्रोत नियम निर्धारित करते हैं — सारथी उन्हें समझाता है और हमेशा दिखाता है कि उत्तर कहाँ से आया।' : 'Sarthi helps you understand government benefits. Government sources define the rules — Sarthi explains them and always shows where the answer came from.'}
           </p>
         </div>
         <div className="grid gap-8 sm:grid-cols-3">
           <FooterCol
-            title="Citizen"
+            title={hi ? 'नागरिक' : 'Citizen'}
             links={[
-              { href: '/explore', label: 'Explore Schemes' },
-              { href: '/benefits', label: 'My Benefits' },
-              { href: '/documents', label: 'Document Center' },
-              { href: '/applications', label: 'My Applications' },
+              { href: '/explore', label: hi ? 'योजनाएँ खोजें' : 'Explore Schemes' },
+              { href: '/benefits', label: hi ? 'मेरे लाभ' : 'My Benefits' },
+              { href: '/documents', label: hi ? 'दस्तावेज़ केंद्र' : 'Document Center' },
+              { href: '/applications', label: hi ? 'मेरे आवेदन' : 'My Applications' },
             ]}
           />
           <FooterCol
-            title="Trust"
+            title={hi ? 'विश्वास' : 'Trust'}
             links={[
-              { href: '/trust', label: 'Sources' },
-              { href: '/updates', label: 'Scheme Updates' },
-              { href: '/conflicts', label: 'Source Conflicts' },
-              { href: '/settings', label: 'Privacy' },
+              { href: '/trust', label: hi ? 'स्रोत' : 'Sources' },
+              { href: '/updates', label: hi ? 'योजना अपडेट' : 'Scheme Updates' },
+              { href: '/conflicts', label: hi ? 'स्रोत मतभेद' : 'Source Conflicts' },
+              { href: '/settings', label: hi ? 'गोपनीयता' : 'Privacy' },
             ]}
           />
           <FooterCol
-            title="Support"
+            title={hi ? 'सहायता' : 'Support'}
             links={[
-              { href: '/help-near-me', label: 'Help Near You' },
-              { href: '/guide', label: 'Application Guide' },
-              { href: '/life-events', label: 'Life Events' },
-              { href: '/admin', label: 'Admin' },
+              { href: '/help-near-me', label: hi ? 'पास में सहायता' : 'Help Near You' },
+              { href: '/guide', label: hi ? 'आवेदन मार्गदर्शिका' : 'Application Guide' },
+              { href: '/life-events', label: hi ? 'जीवन की घटनाएँ' : 'Life Events' },
+              { href: '/admin', label: hi ? 'प्रशासन' : 'Admin' },
             ]}
           />
         </div>
       </div>
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-2 border-t border-border px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
         <p>
-          Sarthi is an information and guidance tool. It does not submit
-          applications on your behalf unless an official integration exists.
+          {hi ? 'सारथी एक सूचना और मार्गदर्शन उपकरण है। यह आपकी ओर से आवेदन जमा नहीं करता जब तक कोई आधिकारिक एकीकरण मौजूद न हो।' : 'Sarthi is an information and guidance tool. It does not submit applications on your behalf unless an official integration exists.'}
         </p>
         <p className="flex items-center gap-1.5">
           <FileText className="size-3.5" />
-          All figures shown are sample data
+          {hi ? 'सभी दिखाए गए आँकड़े नमूना डेटा हैं' : 'All figures shown are sample data'}
         </p>
       </div>
     </footer>

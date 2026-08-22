@@ -1,4 +1,3 @@
-import { AppShell } from '@/components/site-nav'
 import { ChatClient } from './chat-client'
 
 export const metadata = {
@@ -13,9 +12,5 @@ export default async function ChatPage({
   searchParams: Promise<{ q?: string }>
 }) {
   const { q } = await searchParams
-  return (
-    <AppShell>
-      <ChatClient initialQuery={q} />
-    </AppShell>
-  )
+  return <ChatClient initialQuery={q} fullScreen />
 }

@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import {
   Accessibility,
@@ -24,11 +26,13 @@ import {
 
 import { AppFooter, SiteNav } from '@/components/site-nav'
 import { NeedSearch } from '@/components/need-search'
+import { HomeHeroCopy } from '@/components/home-hero-copy'
 import { SchemeCard, SectionTitle, SourceCitation } from '@/components/sarthi-ui'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { categories, citizen, schemes } from '@/lib/data'
+import { useUiPreferences } from '@/components/ui-preferences'
 
 const categoryIcons: Record<string, typeof GraduationCap> = {
   Education: GraduationCap,
@@ -43,29 +47,32 @@ const categoryIcons: Record<string, typeof GraduationCap> = {
   Disability: Accessibility,
 }
 
-const pillars = [
+const getPillars = (hi: boolean) => [
   {
     n: '01',
-    title: 'Discover',
-    body: 'Find schemes relevant to your life and needs — not a list of 400 PDFs.',
+    title: hi ? 'खोजें' : 'Discover',
+    body: hi ? 'अपने जीवन और ज़रूरतों से संबंधित योजनाएँ खोजें — 400 PDF की सूची नहीं।' : 'Find schemes relevant to your life and needs — not a list of 400 PDFs.',
     icon: Sparkles,
   },
   {
     n: '02',
-    title: 'Understand',
-    body: 'See exactly why you qualify or don’t qualify, rule by rule.',
+    title: hi ? 'समझें' : 'Understand',
+    body: hi ? 'नियम दर नियम देखें कि आप पात्र क्यों हैं या नहीं।' : 'See exactly why you qualify or don’t qualify, rule by rule.',
     icon: ScrollText,
   },
   {
     n: '03',
-    title: 'Prepare',
-    body: 'Get your documents ready and know precisely what to do next.',
+    title: hi ? 'तैयारी करें' : 'Prepare',
+    body: hi ? 'अपने दस्तावेज़ तैयार करें और जानें कि आगे क्या करना है।' : 'Get your documents ready and know precisely what to do next.',
     icon: FileCheck2,
   },
 ]
 
 export default function HomePage() {
+  const { language } = useUiPreferences()
+  const hi = language === 'hi'
   const featured = schemes.slice(0, 4)
+  const pillars = getPillars(hi)
 
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
@@ -91,7 +98,7 @@ export default function HomePage() {
                       className="size-1.5 rounded-full bg-success animate-pulse"
                       aria-hidden="true"
                     />
-                    428 schemes tracked · last verified 20 Aug 2026
+                    {hi ? '428 योजनाएँ ट्रैक की गईं · अंतिम सत्यापन 20 अगस्त 2026' : '428 schemes tracked · Last verified 20 August 2026'}
                   </Badge>
 
                   <Badge
@@ -99,55 +106,17 @@ export default function HomePage() {
                     className="h-7 gap-1.5 text-xs text-muted-foreground"
                   >
                     <ShieldCheck className="size-3 text-saffron" />
-                    Official Source Grounded
+                    {hi ? 'आधिकारिक स्रोतों पर आधारित' : 'Grounded in official sources'}
                   </Badge>
                 </div>
 
-                <h1 className="text-4xl leading-[1.06] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl xl:text-7xl">
-                  Government schemes,{' '}
-                  <span className="bg-gradient-to-r from-saffron to-amber-600 bg-clip-text text-transparent">
-                    explained for YOU.
-                  </span>
-                </h1>
-
-                <p className="max-w-3xl text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg lg:text-xl">
-                  Tell Sarthi about your needs in natural language or voice. We&apos;ll find relevant schemes across Central & State departments, check your eligibility rule by rule, and guide your application.
-                </p>
+                <HomeHeroCopy />
 
                 {/* Full-width Widescreen Search Box */}
                 <div className="mt-2 w-full max-w-4xl">
                   <NeedSearch />
                 </div>
 
-                {/* Quick Call-to-Actions */}
-                <div className="mt-2 flex flex-wrap items-center gap-3">
-                  <Button
-                    size="lg"
-                    className="h-12 px-6 text-base font-semibold shadow-md shadow-primary/10 transition-all hover:scale-[1.01]"
-                    render={<Link href="/benefits" />}
-                  >
-                    Find Schemes for Me
-                    <ArrowRight className="size-4" />
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-12 px-6 text-base font-medium transition-all hover:bg-secondary"
-                    render={<Link href="/chat" />}
-                  >
-                    <Sparkles className="size-4 text-saffron" />
-                    Ask Sarthi AI Copilot
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="ghost"
-                    className="h-12 px-5 text-base font-medium text-muted-foreground hover:text-foreground"
-                    render={<Link href="/explore" />}
-                  >
-                    <Compass className="size-4" />
-                    Browse Catalog
-                  </Button>
-                </div>
               </div>
 
               {/* Right Side Widescreen Live Copilot & Insights Panel */}
@@ -161,28 +130,28 @@ export default function HomePage() {
                           <Sparkles className="size-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-foreground">Sarthi AI Copilot</p>
-                          <p className="text-xs text-muted-foreground">Live Profile Matching Active</p>
+                          <p className="text-sm font-bold text-foreground">{hi ? 'सारथी AI कोपायलट' : 'Sarthi AI Copilot'}</p>
+                          <p className="text-xs text-muted-foreground">{hi ? 'लाइव प्रोफ़ाइल मिलान सक्रिय' : 'Live Profile Matching Active'}</p>
                         </div>
                       </div>
                       <Badge className="bg-success-soft text-success border-none text-[0.7rem] font-semibold">
-                        Ready
+                        {hi ? 'तैयार' : 'Ready'}
                       </Badge>
                     </div>
 
                     {/* Citizen Snapshot Quick Metrics */}
                     <div className="rounded-xl bg-secondary/60 p-4 ring-1 ring-border/50">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Active Citizen Profile</span>
+                        <span>{hi ? 'सक्रिय नागरिक प्रोफ़ाइल' : 'Active Citizen Profile'}</span>
                         <span className="font-semibold text-foreground">{citizen.name} ({citizen.initials})</span>
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border/60 pt-3">
                         <div>
-                          <span className="block text-[0.7rem] uppercase tracking-wider text-muted-foreground">State / District</span>
+                          <span className="block text-[0.7rem] uppercase tracking-wider text-muted-foreground">{hi ? 'राज्य / ज़िला' : 'State / District'}</span>
                           <span className="text-sm font-semibold">{citizen.state}, {citizen.district}</span>
                         </div>
                         <div>
-                          <span className="block text-[0.7rem] uppercase tracking-wider text-muted-foreground">Occupation</span>
+                          <span className="block text-[0.7rem] uppercase tracking-wider text-muted-foreground">{hi ? 'पेशा' : 'Occupation'}</span>
                           <span className="text-sm font-semibold">{citizen.occupation}</span>
                         </div>
                       </div>
@@ -193,14 +162,14 @@ export default function HomePage() {
                       <div className="flex flex-col gap-1 rounded-xl bg-card p-3.5 ring-1 ring-foreground/10">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <TrendingUp className="size-3.5 text-success" />
-                          Matches Found
+                          {hi ? 'मिलान मिले' : 'Matches Found'}
                         </div>
-                        <span className="text-xl font-extrabold text-foreground tabular-nums">11 Schemes</span>
+                        <span className="text-xl font-extrabold text-foreground tabular-nums">{hi ? '11 योजनाएँ' : '11 Schemes'}</span>
                       </div>
                       <div className="flex flex-col gap-1 rounded-xl bg-card p-3.5 ring-1 ring-foreground/10">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Zap className="size-3.5 text-saffron" />
-                          Est. Annual Value
+                          {hi ? 'अनु. वार्षिक मूल्य' : 'Est. Annual Value'}
                         </div>
                         <span className="text-xl font-extrabold text-saffron tabular-nums">₹97,000</span>
                       </div>
@@ -211,12 +180,12 @@ export default function HomePage() {
                       <div className="flex items-center gap-2.5">
                         <CheckCircle2 className="size-4 text-saffron shrink-0" />
                         <div>
-                          <p className="text-xs font-bold text-foreground">Punjab Equipment Subsidy</p>
-                          <p className="text-[0.7rem] text-muted-foreground">94% Match · Eligible · Closes in 18 days</p>
+                          <p className="text-xs font-bold text-foreground">{hi ? 'पंजाब उपकरण सब्सिडी' : 'Punjab Equipment Subsidy'}</p>
+                          <p className="text-[0.7rem] text-muted-foreground">{hi ? '94% मिलान · पात्र · 18 दिन शेष' : '94% Match · Eligible · Closes in 18 days'}</p>
                         </div>
                       </div>
                       <Button size="xs" variant="default" className="shrink-0" render={<Link href="/scheme/punjab-farmer-equipment-subsidy" />}>
-                        View Rule
+                        {hi ? 'नियम देखें' : 'View Rule'}
                       </Button>
                     </div>
                   </CardContent>
@@ -231,12 +200,12 @@ export default function HomePage() {
           <SectionTitle
             action={
               <Button size="sm" variant="ghost" className="gap-1 font-semibold" render={<Link href="/explore" />}>
-                All schemes catalog
+                {hi ? 'सभी योजनाओं की सूची' : 'All schemes catalog'}
                 <ArrowRight className="size-3.5" />
               </Button>
             }
           >
-            Explore by category
+            {hi ? 'श्रेणी के अनुसार खोजें' : 'Explore by category'}
           </SectionTitle>
           <ul className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-10">
             {categories.map((cat) => {
@@ -255,7 +224,7 @@ export default function HomePage() {
                         {cat.name}
                       </span>
                       <span className="block text-xs text-muted-foreground tabular-nums">
-                        {cat.count} schemes
+                        {cat.count} {hi ? 'योजनाएँ' : 'schemes'}
                       </span>
                     </div>
                   </Link>
@@ -268,7 +237,7 @@ export default function HomePage() {
         {/* How Sarthi Helps - 3-Column Widescreen Cards */}
         <section className="border-y border-border bg-card/40">
           <div className="mx-auto w-full max-w-[1800px] px-4 py-14 sm:px-8 sm:py-16 lg:px-12">
-            <SectionTitle>How Sarthi platform operates</SectionTitle>
+            <SectionTitle>{hi ? 'सारथी प्लेटफ़ॉर्म कैसे काम करता है' : 'How Sarthi platform operates'}</SectionTitle>
             <ul className="grid gap-6 md:grid-cols-3">
               {pillars.map((p) => {
                 const Icon = p.icon
@@ -299,86 +268,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Built Around You - Expansive Widescreen 3-Column Grid */}
-        <section className="mx-auto w-full max-w-[1800px] px-4 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-            {/* Citizen Profile Side Panel */}
-            <div className="lg:col-span-4 xl:col-span-3">
-              <SectionTitle>Built around you</SectionTitle>
-              <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
-                Sarthi matches schemes against a structured profile you control.
-                Nothing is guessed — every match is evaluated against deterministic eligibility rules.
-              </p>
-
-              <Card className="mt-5 border-border/80 bg-card/90 shadow-sm">
-                <CardContent className="flex flex-col gap-4 p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-12 items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground">
-                      {citizen.initials}
-                    </span>
-                    <div>
-                      <p className="text-base font-bold">{citizen.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Active Profile · {citizen.state}
-                      </p>
-                    </div>
-                  </div>
-
-                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4">
-                    {[
-                      ['Age', `${citizen.age}`],
-                      ['State', citizen.state],
-                      ['Occupation', citizen.occupation],
-                      ['Annual income', citizen.income],
-                    ].map(([k, v]) => (
-                      <div key={k}>
-                        <dt className="text-xs text-muted-foreground">{k}</dt>
-                        <dd className="mt-0.5 text-sm font-semibold">{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-
-                  <Button
-                    className="mt-2 w-full font-semibold"
-                    size="lg"
-                    render={<Link href="/benefits" />}
-                  >
-                    View All Benefit Calculations
-                    <ArrowRight className="size-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Top Matched Schemes - Expansive Grid */}
-            <div className="lg:col-span-8 xl:col-span-9">
-              <SectionTitle
-                action={
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1 font-semibold"
-                    render={<Link href="/explore" />}
-                  >
-                    View all 428 schemes
-                    <ArrowRight className="size-3.5" />
-                  </Button>
-                }
-              >
-                Top eligible matches for your profile
-              </SectionTitle>
-
-              <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
-                {featured.map((s) => (
-                  <li key={s.id}>
-                    <SchemeCard scheme={s} compact />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
         {/* Widescreen Trust & Source Verification Banner */}
         <section className="border-t border-border bg-primary text-primary-foreground">
           <div className="mx-auto w-full max-w-[1800px] px-4 py-14 sm:px-8 sm:py-20 lg:px-12">
@@ -386,13 +275,13 @@ export default function HomePage() {
               <div className="lg:col-span-6">
                 <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-3 py-1 text-xs font-semibold">
                   <ShieldCheck className="size-3.5" />
-                  Trust by design
+                  {hi ? 'विश्वास, डिज़ाइन से' : 'Trust by design'}
                 </span>
                 <h2 className="mt-5 text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
-                  Government information you can verify.
+                  {hi ? 'सरकारी जानकारी जो आप सत्यापित कर सकते हैं।' : 'Government information you can verify.'}
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-relaxed text-primary-foreground/80 text-pretty">
-                  Every important answer is grounded in an official source document. Sarthi does not treat LLM hallucinations as facts — a deterministic rule engine evaluates criteria, and AI explains the result with exact source citations.
+                  {hi ? 'हर महत्वपूर्ण उत्तर आधिकारिक स्रोत दस्तावेज़ पर आधारित है। सारथी AI के अनुमानों को तथ्य नहीं मानता — एक नियतात्मक नियम इंजन मानदंडों का मूल्यांकन करता है, और AI सटीक स्रोत उद्धरणों के साथ परिणाम समझाता है।' : 'Every important answer is grounded in an official source document. Sarthi does not treat LLM hallucinations as facts — a deterministic rule engine evaluates criteria, and AI explains the result with exact source citations.'}
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Button
@@ -401,7 +290,7 @@ export default function HomePage() {
                     className="border-primary-foreground/25 bg-transparent font-semibold text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                     render={<Link href="/trust" />}
                   >
-                    How verification works
+                    {hi ? 'सत्यापन कैसे काम करता है' : 'How verification works'}
                   </Button>
                   <Button
                     variant="ghost"
@@ -409,7 +298,7 @@ export default function HomePage() {
                     className="font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
                     render={<Link href="/updates" />}
                   >
-                    See recent rule changes
+                    {hi ? 'हालिया नियम परिवर्तन देखें' : 'See recent rule changes'}
                   </Button>
                 </div>
               </div>
@@ -419,22 +308,22 @@ export default function HomePage() {
                   <CardContent className="flex flex-col gap-4 p-6">
                     <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
                       <p className="text-base font-bold">
-                        Income must be below ₹3,00,000
+                        {hi ? 'आय ₹3,00,000 से कम होनी चाहिए' : 'Income must be below ₹3,00,000'}
                       </p>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
                         <span
                           className="size-1.5 rounded-full bg-success"
                           aria-hidden="true"
                         />
-                        Verified Clause
+                        {hi ? 'सत्यापित नियम' : 'Verified Clause'}
                       </span>
                     </div>
                     <dl className="grid gap-3 sm:grid-cols-2">
                       {[
-                        ['Official source', 'Department of Agriculture, Punjab'],
-                        ['Source document', 'Equipment Subsidy Guidelines 2026'],
-                        ['Eligibility rule', 'annual_income ≤ 300000'],
-                        ['Last verified', '20 August 2026'],
+                        [hi ? 'आधिकारिक स्रोत' : 'Official source', 'Department of Agriculture, Punjab'],
+                        [hi ? 'स्रोत दस्तावेज़' : 'Source document', 'Equipment Subsidy Guidelines 2026'],
+                        [hi ? 'पात्रता नियम' : 'Eligibility rule', 'annual_income ≤ 300000'],
+                        [hi ? 'अंतिम सत्यापन' : 'Last verified', '20 August 2026'],
                       ].map(([k, v]) => (
                         <div
                           key={k}
@@ -459,14 +348,14 @@ export default function HomePage() {
                         variant="outline"
                         render={<Link href="/trust" />}
                       >
-                        View original source
+                        {hi ? 'मूल स्रोत देखें' : 'View original source'}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         render={<Link href="/conflicts" />}
                       >
-                        Report incorrect information
+                        {hi ? 'गलत जानकारी की रिपोर्ट करें' : 'Report incorrect information'}
                       </Button>
                     </div>
                   </CardContent>
