@@ -96,10 +96,12 @@ npm run dev
 ```
 
 **Terminal 3 — Cloudflare Tunnel (Twilio WhatsApp Webhook):**
-```bash
-cloudflared tunnel --url http://localhost:8000
+```powershell
+# Using the local Cloudflare binary on Desktop:
+C:\Users\Lenovo\Desktop\cloudflared.exe tunnel --url http://localhost:8000
 ```
-> Update your Twilio Sandbox Webhook URL to: `https://<subdomain>.trycloudflare.com/api/twilio/webhook`
+> Copy the output tunnel URL (e.g. `https://<subdomain>.trycloudflare.com`) and set your Twilio WhatsApp Webhook URL in Twilio Console to:  
+> `https://<subdomain>.trycloudflare.com/api/twilio/webhook`
 
 ---
 
