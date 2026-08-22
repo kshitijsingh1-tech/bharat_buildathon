@@ -1,15 +1,74 @@
-# v0 sandbox internal files
+# Next.js & Node.js
+node_modules/
+.next/
+out/
+build/
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Environment & Local Secrets
+.env
+.env*.local
+.env.development
+.env.production
+!.env.example
+
+# Python & AI Pipeline
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+vector_store_cache/
+models_cache/
+*.db
+*.sqlite3
+
+# IDEs & System Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# v0 Sandbox & Vercel
 __v0_runtime_loader.js
 __v0_devtools.tsx
 __v0_jsx-dev-runtime.ts
 .snowflake/
 .v0-trash/
 .vercel/
-
-# Environment variables
-.env*.local
-
-# Common ignores
-node_modules
-.next/
-.DS_Store

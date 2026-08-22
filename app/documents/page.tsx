@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AppShell } from '@/components/site-nav'
 import { DocumentsClient } from './documents-client'
 
 export const metadata: Metadata = {
@@ -9,8 +10,8 @@ export const metadata: Metadata = {
 
 export default function DocumentsPage() {
   return (
-    <main id="main">
+    <AppShell>
       <DocumentsClient />
-    </main>
+    </AppShell>
   )
 }

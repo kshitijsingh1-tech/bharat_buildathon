@@ -83,7 +83,7 @@ export function DocumentsClient() {
   const renewalsDue = documents.reduce((n, d) => n + d.needsRenewal, 0)
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 lg:py-12">
+    <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-10 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
       {/* ------------------------------------------------------------ header */}
       <header className="flex flex-col gap-4">
         <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">

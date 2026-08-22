@@ -378,7 +378,7 @@ export function ExploreClient({
               </CardContent>
             </Card>
           ) : (
-            <ul className="grid gap-4 sm:grid-cols-2">
+            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {results.map((s) => (
                 <li key={s.id}>
                   <SchemeCard scheme={s} />

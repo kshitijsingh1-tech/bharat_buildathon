@@ -75,7 +75,7 @@ export function SiteNav() {
       </a>
 
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 w-full max-w-[1800px] items-center gap-4 px-4 sm:px-8 lg:px-12">
           <Link
             href="/"
             className="rounded-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -304,7 +304,7 @@ export function DemoDataNote({ className }: { className?: string }) {
 export function AppFooter() {
   return (
     <footer className="mt-16 border-t border-border bg-card/40">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
+      <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 px-4 py-10 sm:px-8 lg:px-12 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
           <SarthiLogo />
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -343,7 +343,7 @@ export function AppFooter() {
           />
         </div>
       </div>
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-2 border-t border-border px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-2 border-t border-border px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
         <p>
           Sarthi is an information and guidance tool. It does not submit
           applications on your behalf unless an official integration exists.
@@ -398,7 +398,7 @@ export function AppShell({
       <main
         id="main"
         className={cn(
-          'mx-auto w-full max-w-[1400px] flex-1 px-4 pt-8 pb-28 sm:px-6 md:pb-12',
+          'mx-auto w-full max-w-[1800px] flex-1 px-4 pt-8 pb-28 sm:px-8 lg:px-12 md:pb-12',
           className,
         )}
       >
