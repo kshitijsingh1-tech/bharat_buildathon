@@ -55,7 +55,7 @@ class RAGCopilot:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Scheme Context:\n{context_str}\n\nCitizen Query: {user_message}"}
                 ],
-                model="llama-3.3-70b-versatile",
+                model="groq/compound-mini",
                 temperature=0.3,
                 max_tokens=400
             )
