@@ -133,14 +133,15 @@ class RAGCopilot:
 
     def has_sufficient_profile(self, citizen_profile: Optional[Dict[str, Any]]) -> bool:
         """
-        Checks if we have enough profile data (age + caste + state) to give customized results.
+        Checks if we have enough profile data (age + state) to give customized results.
+        Category is optional (defaults to General if omitted).
         """
         if not citizen_profile:
             return False
         has_age = bool(citizen_profile.get("age"))
-        has_caste = bool(citizen_profile.get("category"))
         has_state = bool(citizen_profile.get("state"))
-        return has_age and has_caste and has_state
+        # Having age and state is sufficient for personalized RAG scheme matching!
+        return has_age and has_state
 
     # ----------------------------------------------------------------
     # GENERAL CHAT (non-scheme conversation via Groq LLM)

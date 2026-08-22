@@ -395,15 +395,16 @@ export function ChatClient({ initialQuery, fullScreen = false }: { initialQuery?
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
   }, [])
 
-  const sendToBackend = async (text: string) => {
+  const sendToBackend = async (text: string, currentProfile: UserProfile = profile) => {
     try {
+      const mergedProfile = { ...currentProfile, ...sessionProfile }
       const res = await fetch(`http://localhost:8000/api/chat/copilot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
           language: hi ? 'hi' : 'en',
-          citizenProfile: Object.keys(sessionProfile).length > 0 ? sessionProfile : undefined
+          citizenProfile: Object.keys(mergedProfile).length > 0 ? mergedProfile : undefined
         })
       })
       if (res.ok) {
@@ -481,7 +482,7 @@ export function ChatClient({ initialQuery, fullScreen = false }: { initialQuery?
     setProfile(newProfile)
 
     // Call RAG backend
-    const backendData = await sendToBackend(text)
+    const backendData = await sendToBackend(text, newProfile)
 
     // Find next missing field
     const nextField = getNextMissingField(newProfile)
@@ -734,7 +735,7 @@ export function ChatClient({ initialQuery, fullScreen = false }: { initialQuery?
               <div key={m.id} className="flex gap-4">
                 <SarthiMark className="mt-0.5 size-8 shrink-0" />
                 <div className="min-w-0 flex-1 space-y-4">
-                  <div className="rounded-2xl rounded-tl-md bg-card p-5 ring-1 ring-foreground/10 shadow-xs prose prose-sm dark:prose-invert max-w-none text-base leading-relaxed text-pretty">
+                  <div className="rounded-2xl rounded-tl-md bg-card p-5 ring-1 ring-foreground/15 shadow-xs prose prose-slate dark:prose-invert max-w-none text-base font-medium text-foreground leading-relaxed text-pretty">
                     <ReactMarkdown>{m.text}</ReactMarkdown>
                     {m.citation && (
                       <SourceCitation

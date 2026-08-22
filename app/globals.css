@@ -225,3 +225,8 @@ body {
   --border: oklch(0.5 0.02 258);
 }
 
+/* Ensure strong typography text contrast in chat bubbles */
+.prose p, .prose li, .prose span, .prose strong {
+  color: var(--foreground) !important;
+}
+
