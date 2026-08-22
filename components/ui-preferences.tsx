@@ -15,7 +15,7 @@ type Preferences = {
 const PreferencesContext = createContext<Preferences | null>(null)
 
 export function UiPreferencesProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<AppLanguage>('hi')
+  const [language, setLanguage] = useState<AppLanguage>('en')
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
