@@ -46,18 +46,18 @@ class TwilioService:
         citations = response_data.get("citations", [])
         top_scheme = response_data.get("topScheme")
 
-        twiml_reply = f"🇮🇳 *Sarthi Benefits Copilot*\n\n{answer_text}"
+        twiml_reply = f"*Sarthi Benefits Copilot*\n\n{answer_text}"
         
         if top_scheme:
-            twiml_reply += f"\n\n🏆 *Recommended Match:* {top_scheme.get('name')}\n"
-            twiml_reply += f"💸 *Benefit:* {top_scheme.get('benefit')}\n"
-            twiml_reply += f"⏳ *Deadline:* {top_scheme.get('deadlineLabel', 'Open')}"
+            twiml_reply += f"\n\n- Recommended Match: {top_scheme.get('name')}\n"
+            twiml_reply += f"- Financial Benefit: {top_scheme.get('benefit')}\n"
+            twiml_reply += f"- Application Deadline: {top_scheme.get('deadlineLabel', 'Open')}"
 
         if citations:
             c = citations[0]
-            twiml_reply += f"\n\n📍 *Grounded Policy Source:* {c.get('source', '')} ({c.get('page', '')})"
+            twiml_reply += f"\n\n- Grounded Policy Source: {c.get('source', '')} ({c.get('page', '')})"
         
-        twiml_reply += "\n\n🌐 *View Full Profile & Apply:* http://localhost:3000/benefits"
+        twiml_reply += "\n\n- View Full Profile & Apply: http://localhost:3000/benefits"
         return self.format_twiml_response(twiml_reply)
 
     def handle_incoming_message(self, incoming_body: str, from_number: str = "") -> str:
@@ -69,10 +69,10 @@ class TwilioService:
         Dispatches outbound SMS/WhatsApp notification for scheme deadlines or eligibility match.
         """
         message_body = (
-            f"🔔 *Sarthi Scheme Alert*\n"
-            f"You qualify for *{scheme_name}*!\n"
-            f"⚠️ Application deadline closes in {deadline_days} days.\n"
-            f"Verify requirements & apply now: http://localhost:3000/explore"
+            f"*Sarthi Scheme Alert*\n"
+            f"You qualify for *{scheme_name}*.\n"
+            f"- Application deadline closes in {deadline_days} days.\n"
+            f"- Verify requirements & apply: http://localhost:3000/explore"
         )
         
         sender = self.whatsapp_from if is_whatsapp else self.from_phone
