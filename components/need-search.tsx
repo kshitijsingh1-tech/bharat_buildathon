@@ -1,28 +1,52 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ArrowUp, Languages, Mic, Square } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useUiPreferences } from '@/components/ui-preferences'
 
 const examples = [
-  { icon: '🎓', text: "I'm a student looking for scholarships" },
-  { icon: '🌾', text: "I'm a farmer looking for subsidies" },
-  { icon: '🏠', text: 'I need housing assistance' },
-  { icon: '💼', text: 'I want to start a business' },
-  { icon: '👵', text: 'Find benefits for my parents' },
+  { icon: '🎓', text: 'मैं छात्रवृत्ति खोज रहा/रही हूँ' },
+  { icon: '🌾', text: 'मैं किसान हूँ और सहायता चाहता/चाहती हूँ' },
+  { icon: '🏠', text: 'मुझे आवास सहायता चाहिए' },
+  { icon: '💼', text: 'मैं व्यवसाय शुरू करना चाहता/चाहती हूँ' },
+  { icon: '👵', text: 'मेरे माता-पिता के लिए लाभ खोजें' },
 ]
 
 export function NeedSearch({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
   const router = useRouter()
+  const { language } = useUiPreferences()
   const [value, setValue] = useState('')
   const [recording, setRecording] = useState(false)
-  const [lang, setLang] = useState<'English' | 'हिन्दी'>('English')
+  const [voiceLanguage, setVoiceLanguage] = useState<'हिंदी' | 'English' | 'Hinglish'>('हिंदी')
+  const [voiceError, setVoiceError] = useState('')
+  const recognitionRef = useRef<{ stop: () => void } | null>(null)
+  const hi = language === 'hi'
 
   const submit = () => {
     router.push(`/chat${value ? `?q=${encodeURIComponent(value)}` : ''}`)
+  }
+
+  const startVoiceInput = () => {
+    if (recording) {
+      recognitionRef.current?.stop()
+      return
+    }
+    const Recognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
+    if (!Recognition) return setVoiceError(hi ? 'इस ब्राउज़र में आवाज़ से लिखना उपलब्ध नहीं है।' : 'Voice input is not supported in this browser.')
+    const recognition = new Recognition()
+    recognition.lang = voiceLanguage === 'English' ? 'en-IN' : 'hi-IN'
+    recognition.interimResults = false
+    recognition.onresult = (event: any) => setValue((current) => `${current}${current ? ' ' : ''}${event.results[event.results.length - 1][0].transcript}`)
+    recognition.onerror = () => setVoiceError(hi ? 'आवाज़ स्पष्ट नहीं मिली। फिर कोशिश करें।' : 'We could not hear you clearly. Please try again.')
+    recognition.onend = () => setRecording(false)
+    recognitionRef.current = recognition
+    setVoiceError('')
+    setRecording(true)
+    recognition.start()
   }
 
   return (
@@ -38,7 +62,7 @@ export function NeedSearch({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
         )}
       >
         <label htmlFor="need-search" className="sr-only">
-          Tell Sarthi what you need
+          {hi ? 'अपनी ज़रूरत बताएँ' : 'Tell Sarthi what you need'}
         </label>
         <textarea
           id="need-search"
@@ -56,7 +80,7 @@ export function NeedSearch({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
             }
           }}
           rows={size === 'lg' ? 2 : 1}
-          placeholder="Tell me what you need..."
+          placeholder={hi ? 'आपको किस सहायता की ज़रूरत है?' : 'What help do you need?'}
           className={cn(
             'w-full resize-none bg-transparent px-3 py-2 leading-relaxed placeholder:text-muted-foreground focus:outline-none',
             size === 'lg' ? 'text-base sm:text-lg' : 'text-sm',
@@ -66,15 +90,15 @@ export function NeedSearch({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setLang(lang === 'English' ? 'हिन्दी' : 'English')}
+              onClick={() => setVoiceLanguage((current) => current === 'हिंदी' ? 'English' : current === 'English' ? 'Hinglish' : 'हिंदी')}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Languages className="size-3.5" />
-              <span className={cn(lang === 'हिन्दी' && 'text-hi')}>{lang}</span>
+              <span className="text-hi">{voiceLanguage}</span>
             </button>
             <button
               type="button"
-              onClick={() => setRecording((v) => !v)}
+              onClick={startVoiceInput}
               aria-pressed={recording}
               aria-label={recording ? 'Stop recording' : 'Start voice input'}
               className={cn(
@@ -99,12 +123,12 @@ export function NeedSearch({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
                       />
                     ))}
                   </span>
-                  Listening
+                  {hi ? 'सुन रहे हैं' : 'Listening'}
                 </>
               ) : (
                 <>
                   <Mic className="size-3.5" />
-                  Speak
+                  {hi ? 'बोलें' : 'Speak'}
                 </>
               )}
             </button>
@@ -112,12 +136,13 @@ export function NeedSearch({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
           <Button
             type="submit"
             size={size === 'lg' ? 'icon-lg' : 'icon'}
-            aria-label="Ask Sarthi"
+            aria-label={hi ? 'सारथी से पूछें' : 'Ask Sarthi'}
           >
             <ArrowUp />
           </Button>
         </div>
       </form>
+      {voiceError && <p className="mt-2 text-xs text-destructive">{voiceError}</p>}
 
       {size === 'lg' && (
         <ul className="mt-4 flex flex-wrap justify-center gap-2">

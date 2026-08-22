@@ -304,12 +304,12 @@ export function EligibilityCriterion({ criterion }: { criterion: Criterion }) {
 
 export function SourceCitation({
   source,
-  page,
+  page = 'Policy Clause 4.2',
   verified = '20 Aug 2026',
   className,
 }: {
   source: string
-  page: string
+  page?: string
   verified?: string
   className?: string
 }) {

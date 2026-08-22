@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono, Noto_Sans_Devanagari } from 'next/font/google'
 import './globals.css'
+import { UiPreferencesProvider } from '@/components/ui-preferences'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -46,8 +47,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#faf8f4',
+  colorScheme: 'light dark',
+  themeColor: '#0f172a',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -65,7 +66,7 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} ${notoDeva.variable}`}
     >
       <body className="bg-background font-sans antialiased">
-        {children}
+        <UiPreferencesProvider>{children}</UiPreferencesProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
