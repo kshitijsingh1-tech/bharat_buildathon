@@ -38,19 +38,26 @@ class TwilioService:
     def process_incoming_query(self, incoming_body: str, sender_number: str = "") -> str:
         """
         Processes incoming citizen query via SMS/WhatsApp through Sarthi RAG Copilot
-        and returns XML TwiML string response.
+        and returns XML TwiML string response formatted for WhatsApp rich text.
         """
         response_data = self.copilot.process_query(user_message=incoming_body)
 
         answer_text = response_data.get("reply", "Namaste! Sarthi couldn't process your query. Please visit http://localhost:3000.")
         citations = response_data.get("citations", [])
+        top_scheme = response_data.get("topScheme")
 
         twiml_reply = f"🇮🇳 *Sarthi Benefits Copilot*\n\n{answer_text}"
+        
+        if top_scheme:
+            twiml_reply += f"\n\n🏆 *Recommended Match:* {top_scheme.get('name')}\n"
+            twiml_reply += f"💸 *Benefit:* {top_scheme.get('benefit')}\n"
+            twiml_reply += f"⏳ *Deadline:* {top_scheme.get('deadlineLabel', 'Open')}"
+
         if citations:
             c = citations[0]
-            twiml_reply += f"\n\n📍 *Source:* {c.get('source', '')} ({c.get('page', '')})"
+            twiml_reply += f"\n\n📍 *Grounded Policy Source:* {c.get('source', '')} ({c.get('page', '')})"
         
-        twiml_reply += "\n\n🌐 View full profile & apply: http://localhost:3000/benefits"
+        twiml_reply += "\n\n🌐 *View Full Profile & Apply:* http://localhost:3000/benefits"
         return self.format_twiml_response(twiml_reply)
 
     def send_scheme_alert(self, to_phone: str, scheme_name: str, deadline_days: int, is_whatsapp: bool = False) -> Dict[str, Any]:

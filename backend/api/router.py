@@ -2,8 +2,9 @@
 Sarthi API Router - Endpoints for Semantic Search, Eligibility, Chat Copilot, Document OCR, and Simulations.
 """
 
-from fastapi import APIRouter, HTTPException, Query
-from typing import List, Dict, Any
+import sys
+from fastapi import APIRouter, HTTPException, Query, Response, Form, Request
+from typing import List, Dict, Any, Optional
 
 from backend.models.schemas import (
     SearchQueryRequest,
@@ -28,7 +29,6 @@ from ai_pipeline import (
     SimulatorEngine,
     TwilioService
 )
-from fastapi import Response, Form
 
 router = APIRouter()
 
@@ -39,7 +39,7 @@ evaluator = EligibilityEvaluator(kb)
 copilot = RAGCopilot(kb, search_engine)
 doc_processor = DocumentProcessor()
 simulator = SimulatorEngine(kb, evaluator)
-twilio_service = TwilioService()
+twilio_service = TwilioService(kb, search_engine)
 
 
 @router.get("/schemes", response_model=List[Dict[str, Any]])
@@ -141,12 +141,40 @@ def send_twilio_alert(req: TwilioAlertRequest):
     )
 
 
-@router.post("/twilio/webhook")
-def twilio_incoming_webhook(Body: str = Form(""), From: str = Form("")):
+@router.api_route("/twilio/webhook", methods=["GET", "POST"])
+async def twilio_incoming_webhook(request: Request, Body: Optional[str] = Form(None), From: Optional[str] = Form(None)):
     """
     Twilio HTTP Webhook Callback endpoint for incoming SMS/WhatsApp queries.
-    Returns XML TwiML response.
+    Parses both form-data and raw query parameters and returns XML TwiML response.
     """
-    twiml_xml = twilio_service.process_incoming_query(incoming_body=Body, sender_number=From)
-    return Response(content=twiml_xml, media_type="application/xml")
+    msg_body = Body or ""
+    sender = From or ""
 
+    # If form data missing, attempt parsing form or query params from raw request
+    if not msg_body:
+        try:
+            form_data = await request.form()
+            msg_body = form_data.get("Body", "")
+            sender = form_data.get("From", "")
+        except Exception:
+            pass
+
+    if not msg_body:
+        msg_body = request.query_params.get("Body", "Hi")
+    if not sender:
+        sender = request.query_params.get("From", "WhatsApp Citizen")
+
+    print("\n" + "="*75, flush=True)
+    print(f"📱 [TWILIO WHATSAPP / SMS RECEIVED]", flush=True)
+    print(f"   👤 From: {sender}", flush=True)
+    print(f"   💬 Query: {msg_body}", flush=True)
+    print("="*75, flush=True)
+
+    twiml_xml = twilio_service.process_incoming_query(incoming_body=msg_body, sender_number=sender)
+
+    print("🤖 [SARTHI RAG RESPONSE GENERATED]", flush=True)
+    print(twiml_xml, flush=True)
+    print("="*75 + "\n", flush=True)
+    sys.stdout.flush()
+
+    return Response(content=twiml_xml, media_type="application/xml")
