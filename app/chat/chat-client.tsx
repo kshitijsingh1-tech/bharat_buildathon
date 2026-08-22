@@ -132,6 +132,7 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
   const [value, setValue] = useState('')
   const [thinking, setThinking] = useState(false)
   const [recording, setRecording] = useState(false)
+  const [explainSimply, setExplainSimply] = useState(false)
   const [lang, setLang] = useState<'English' | 'हिन्दी'>('English')
   const turnRef = useRef(initialQuery ? 1 : 0)
   const endRef = useRef<HTMLDivElement>(null)
@@ -140,7 +141,7 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, thinking])
 
-  const send = (raw?: string) => {
+  const send = async (raw?: string) => {
     const text = (raw ?? value).trim()
     if (!text) return
     setValue('')
@@ -151,10 +152,52 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
     setThinking(true)
     const turn = turnRef.current
     turnRef.current += 1
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/chat/copilot?explain_simply=${explainSimply}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          language: lang === 'हिन्दी' ? 'hi' : 'en',
+          citizenProfile: {
+            name: citizen.name,
+            age: citizen.age,
+            occupation: citizen.occupation,
+            state: citizen.state,
+            annualIncome: 240000
+          }
+        })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setThinking(false)
+        setMessages((m) => [
+          ...m,
+          {
+            id: `s${Date.now()}`,
+            role: 'sarthi',
+            text: data.reply || data.rawReply || 'Processed query successfully.',
+            citation: data.citations?.[0] ? { source: data.citations[0].source, page: data.citations[0].clause } : undefined,
+            schemeIds: data.topScheme?.id ? [data.topScheme.id] : undefined,
+            followUps: [
+              'Explain this in simpler terms',
+              'Where is the nearest CSC Helpdesk?',
+              'Show document requirements'
+            ]
+          }
+        ])
+        return
+      }
+    } catch (e) {
+      console.warn('Backend server offline, falling back to local copilot engine:', e)
+    }
+
     window.setTimeout(() => {
       setThinking(false)
       setMessages((m) => [...m, cannedReply(turn)])
-    }, 1100)
+    }, 900)
   }
 
   return (
@@ -232,16 +275,25 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant={explainSimply ? 'default' : 'outline'}
+              size="sm"
+              className={cn('gap-1.5 font-semibold text-xs', explainSimply && 'bg-saffron text-saffron-foreground hover:bg-saffron/90')}
+              onClick={() => setExplainSimply(!explainSimply)}
+            >
+              <Sparkles className="size-3.5" />
+              {explainSimply ? '💡 Explain Simply: ON' : '💡 Explain Simply Mode'}
+            </Button>
+            <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 font-semibold"
+              className="gap-1.5 font-semibold text-xs"
               onClick={() => {
                 turnRef.current = 0
                 setMessages(initialThread())
               }}
             >
-              <Plus className="size-4" />
-              New Conversation
+              <Plus className="size-3.5" />
+              New Chat
             </Button>
           </div>
         </div>
@@ -411,13 +463,38 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRecording((v) => !v)}
+                  onClick={() => {
+                    if (recording) {
+                      setRecording(false)
+                      return
+                    }
+                    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+                      const recognition = new SpeechRecognition()
+                      recognition.lang = lang === 'हिन्दी' ? 'hi-IN' : 'en-IN'
+                      recognition.continuous = false
+                      recognition.interimResults = false
+                      setRecording(true)
+
+                      recognition.onresult = (event: any) => {
+                        const transcript = event.results[0][0].transcript
+                        setValue(transcript)
+                        setRecording(false)
+                        send(transcript)
+                      }
+                      recognition.onerror = () => setRecording(false)
+                      recognition.onend = () => setRecording(false)
+                      recognition.start()
+                    } else {
+                      alert('Speech Recognition is supported in Chrome, Edge, and Safari browsers.')
+                    }
+                  }}
                   aria-pressed={recording}
                   aria-label={recording ? 'Stop recording' : 'Start voice input'}
                   className={cn(
-                    'inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium',
+                    'inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-all',
                     recording
-                      ? 'bg-destructive/10 text-destructive'
+                      ? 'bg-destructive/10 text-destructive animate-pulse'
                       : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
                   )}
                 >

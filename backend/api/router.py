@@ -77,15 +77,42 @@ def evaluate_eligibility(req: EligibilityRequest):
     return res
 
 
-@router.post("/chat/copilot", response_model=ChatResponse)
-def chat_with_copilot(req: ChatQueryRequest):
-    """RAG AI Copilot endpoint for natural language query resolution with policy citations."""
+@router.post("/chat/copilot", response_model=Dict[str, Any])
+def chat_with_copilot(req: ChatQueryRequest, explain_simply: bool = Query(False), pincode: str = Query("")):
+    """
+    RAG AI Copilot endpoint with:
+    - Groq LLM synthesis
+    - 'Explain Simply' mode
+    - Docs + CSC Locator (nearest centres)
+    - Trust Signals (Official URL, last verified date, disclaimer)
+    """
     profile_dict = req.citizenProfile.dict() if req.citizenProfile else None
     return copilot.process_query(
         user_message=req.message,
         citizen_profile=profile_dict,
+        explain_simply=explain_simply,
+        pincode=pincode,
         language=req.language
     )
+
+
+@router.get("/csc/locator", response_model=List[Dict[str, Any]])
+def locate_csc_centers(pincode: str = "", district: str = "", state: str = ""):
+    """Returns nearest Common Service Centres (CSCs) for physical application submission."""
+    return kb.find_nearest_csc(pincode=pincode, district=district, state=state)
+
+
+@router.post("/proactive/match", response_model=List[Dict[str, Any]])
+def proactive_scheme_match(profile: Dict[str, Any]):
+    """Proactive Matching Engine: Pings users on newly matching schemes based on saved profiles."""
+    return copilot.proactive_match_profiles(profile)
+
+
+@router.post("/dataset/import-myscheme", response_model=Dict[str, Any])
+def import_myscheme_dataset(records: List[Dict[str, Any]]):
+    """Imports government schemes from HuggingFace dataset (shrijayan/gov_myscheme) into Knowledge Base."""
+    count = kb.import_myscheme_dataset(records)
+    return {"status": "success", "importedCount": count, "totalSchemes": len(kb.get_all_schemes())}
 
 
 @router.post("/documents/analyze", response_model=Dict[str, Any])
