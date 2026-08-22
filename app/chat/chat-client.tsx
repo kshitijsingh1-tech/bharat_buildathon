@@ -1,5 +1,7 @@
 'use client'
 
+import ReactMarkdown from 'react-markdown'
+
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -129,6 +131,7 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
   const [messages, setMessages] = useState<Msg[]>(() =>
     initialThread(initialQuery),
   )
+  const [sessionProfile, setSessionProfile] = useState<any>({})
   const [value, setValue] = useState('')
   const [thinking, setThinking] = useState(false)
   const [recording, setRecording] = useState(false)
@@ -160,19 +163,18 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
         body: JSON.stringify({
           message: text,
           language: lang === 'हिन्दी' ? 'hi' : 'en',
-          citizenProfile: {
-            name: citizen.name,
-            age: citizen.age,
-            occupation: citizen.occupation,
-            state: citizen.state,
-            annualIncome: 240000
-          }
+          citizenProfile: Object.keys(sessionProfile).length > 0 ? sessionProfile : undefined
         })
       })
 
       if (res.ok) {
         const data = await res.json()
         setThinking(false)
+        
+        if (data.citizenProfile) {
+          setSessionProfile(data.citizenProfile)
+        }
+
         setMessages((m) => [
           ...m,
           {
@@ -218,22 +220,22 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
           <CardContent className="flex flex-col gap-3 p-4">
             <div className="flex items-center gap-3">
               <span className="flex size-10 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                {citizen.initials}
+                {sessionProfile.name ? sessionProfile.name.charAt(0).toUpperCase() : '?'}
               </span>
               <div>
-                <p className="text-sm font-bold">{citizen.name}</p>
-                <p className="text-xs text-muted-foreground">{citizen.occupation} · {citizen.state}</p>
+                <p className="text-sm font-bold">{sessionProfile.name || 'Citizen'}</p>
+                <p className="text-xs text-muted-foreground">{sessionProfile.occupation || 'Unknown'} · {sessionProfile.state || 'Unknown State'}</p>
               </div>
             </div>
 
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs border-t border-border pt-3">
               <div>
                 <span className="text-muted-foreground block text-[0.6875rem]">Age</span>
-                <span className="font-semibold">{citizen.age} years</span>
+                <span className="font-semibold">{sessionProfile.age ? `${sessionProfile.age} years` : 'Pending'}</span>
               </div>
               <div>
-                <span className="text-muted-foreground block text-[0.6875rem]">Income</span>
-                <span className="font-semibold">{citizen.income}</span>
+                <span className="text-muted-foreground block text-[0.6875rem]">Category</span>
+                <span className="font-semibold">{sessionProfile.category || 'Pending'}</span>
               </div>
             </div>
           </CardContent>
@@ -310,8 +312,8 @@ export function ChatClient({ initialQuery }: { initialQuery?: string }) {
               <div key={m.id} className="flex gap-4">
                 <SarthiMark className="mt-0.5 size-8 shrink-0" />
                 <div className="min-w-0 flex-1 space-y-4">
-                  <div className="rounded-2xl rounded-tl-md bg-card p-5 ring-1 ring-foreground/10 shadow-xs">
-                    <p className="text-base leading-relaxed text-pretty">{m.text}</p>
+                  <div className="rounded-2xl rounded-tl-md bg-card p-5 ring-1 ring-foreground/10 shadow-xs prose prose-sm dark:prose-invert max-w-none text-base leading-relaxed text-pretty">
+                    <ReactMarkdown>{m.text}</ReactMarkdown>
                     {m.citation && (
                       <SourceCitation
                         source={m.citation.source}
