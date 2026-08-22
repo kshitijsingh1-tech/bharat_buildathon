@@ -21,6 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SarthiLogo, SarthiMark } from '@/components/sarthi-logo'
+import { GoogleTranslate } from '@/components/google-translate'
 import { cn } from '@/lib/utils'
 
 const primaryNav = [
@@ -106,30 +107,8 @@ export function SiteNav() {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-1.5 xl:ml-0">
-            <div
-              role="group"
-              aria-label="Language"
-              className="hidden items-center rounded-lg bg-secondary p-0.5 sm:flex"
-            >
-              {(['EN', 'हिं'] as const).map((l) => (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => setLang(l)}
-                  aria-pressed={lang === l}
-                  className={cn(
-                    'min-w-9 rounded-md px-2 py-1 text-xs font-semibold transition-colors',
-                    l === 'हिं' && 'font-devanagari',
-                    lang === l
-                      ? 'bg-card text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {l === 'हिं' ? <span className="text-hi">हिं</span> : l}
-                </button>
-              ))}
-            </div>
+          <div className="ml-auto flex items-center gap-2 xl:ml-0">
+            <GoogleTranslate />
 
             <Button
               variant="ghost"

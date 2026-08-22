@@ -120,3 +120,35 @@
 @utility text-hi {
   font-family: var(--font-devanagari);
 }
+
+/* Google Translate Widget Custom Styling */
+.google-translate-container .goog-te-gadget-simple {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-sans) !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.google-translate-container .goog-te-gadget-simple img {
+  display: none !important;
+}
+
+.google-translate-container .goog-te-gadget-simple .goog-te-menu-value {
+  color: var(--foreground) !important;
+  font-weight: 600 !important;
+}
+
+.google-translate-container .goog-te-gadget-simple .goog-te-menu-value span {
+  border-left: none !important;
+}
+
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+body {
+  top: 0px !important;
+}
