@@ -1,11 +1,12 @@
 """
-Sarthi AI Pipeline - Multilingual RAG Copilot & Intelligent Profiling System
+Sarthi AI Pipeline - Multilingual RAG Copilot, Central vs State Bifurcation & Intelligent Profiling
 Features:
-1. Clean, Organized Formatting (No emojis, hyphenated bullet points, clear spacing)
-2. Intelligent Multi-Turn Profiling System (Asks missing profile questions like age, income, state, education)
-3. Multilingual Translation Ready Backend (Compatible with Google Chrome translation & multi-language input)
-4. Docs + CSC Locator Integration
-5. Trust Signals & Grounded Policy Verification
+1. Central Govt vs State Govt Scheme Bifurcation
+2. Intelligent Profiling System (Asks for Age, Caste/Category, Region/State, Household Income)
+3. Clean WhatsApp-Professional Layout (Mid-dots '•', hyphens '-', emoji-free, clean line breaks)
+4. Multilingual Translation Compatibility
+5. Docs + CSC Locator Integration
+6. Grounded Policy Verification & Trust Signals
 """
 
 import os
@@ -32,7 +33,7 @@ class RAGCopilot:
     def analyze_missing_profile_attributes(self, user_message: str, citizen_profile: Optional[Dict[str, Any]]) -> List[str]:
         """
         Intelligent System: Analyzes query and citizen profile to identify missing critical parameters
-        needed to accurately recommend scholarships or government schemes (e.g., age, income, state, education level).
+        needed to accurately recommend scholarships or government schemes (Age, Caste/Category, State/Region, Income).
         """
         missing = []
         msg_lower = user_message.lower()
@@ -43,36 +44,57 @@ class RAGCopilot:
         if not has_age:
             missing.append("Age (or date of birth)")
 
-        # Income check
-        has_income = bool(profile.get("annualIncome") or profile.get("income")) or any(k in msg_lower for k in ["lakh", "income", "earning", "salary", "rupees", "rs"])
+        # Caste / Category check (General, SC, ST, OBC, EWS)
+        has_caste = bool(profile.get("category")) or any(k in msg_lower for k in ["sc", "st", "obc", "ews", "general", "caste", "category"])
+        if not has_caste:
+            missing.append("Category / Caste (General / SC / ST / OBC / EWS)")
+
+        # State / Region (Domicile) check
+        has_state = bool(profile.get("state")) or any(k in msg_lower for k in ["punjab", "delhi", "haryana", "bihar", "up", "karnataka", "maharashtra", "state", "domicile", "region"])
+        if not has_state:
+            missing.append("State of Residence / Domicile Region")
+
+        # Annual Income check
+        has_income = bool(profile.get("annualIncome") or profile.get("income") or profile.get("incomeValue")) or any(k in msg_lower for k in ["lakh", "income", "earning", "salary", "rupees", "rs"])
         if not has_income:
             missing.append("Annual Family Household Income (e.g., <= Rs 2,50,000)")
 
-        # State/Domicile check
-        has_state = bool(profile.get("state")) or any(k in msg_lower for k in ["punjab", "delhi", "haryana", "bihar", "up", "karnataka", "maharashtra", "state", "domicile"])
-        if not has_state:
-            missing.append("State of Residence / Domicile")
-
-        # Education Level / Occupation check (especially for university scholarships)
-        if "scholarship" in msg_lower or "university" in msg_lower or "college" in msg_lower or "student" in msg_lower:
-            has_edu = any(k in msg_lower for k in ["undergraduate", "postgraduate", "degree", "diploma", "class 12", "10th", "btech", "ba", "bsc", "ma", "msc", "phd", "matric"])
+        # Education level check for scholarships/university queries
+        if any(k in msg_lower for k in ["scholarship", "university", "college", "student", "degree"]):
+            has_edu = any(k in msg_lower for k in ["undergraduate", "postgraduate", "diploma", "12th", "10th", "btech", "ba", "bsc", "phd"])
             if not has_edu:
-                missing.append("Current Course / Education Level (e.g., Undergraduate, Post-Graduate, Diploma)")
+                missing.append("Current Course / Education Level")
 
         return missing
+
+    def bifurcate_schemes_by_level(self, schemes: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Intelligently bifurcates schemes into Central Government Schemes and State Government Schemes.
+        """
+        central = []
+        state = []
+        for s in schemes:
+            lvl = s.get("level", "").lower()
+            st = s.get("state", "").lower()
+            if lvl == "central" or st in ["all india", "central"]:
+                central.append(s)
+            else:
+                state.append(s)
+
+        return {"central": central, "state": state}
 
     def generate_groq_response(
         self,
         user_message: str,
-        top_scheme: Dict[str, Any],
-        all_schemes: List[Dict[str, Any]],
+        central_schemes: List[Dict[str, Any]],
+        state_schemes: List[Dict[str, Any]],
         explain_simply: bool = False,
         language: str = "en",
         missing_attrs: List[str] = None
     ) -> Optional[str]:
         """
         Synthesizes grounded RAG response using Groq LLM (groq/compound-mini).
-        Enforces clean, organized, emoji-free hyphenated formatting and handles multilingual queries.
+        Enforces Central vs State Scheme bifurcation, mid-dot bullets '•', clean line breaks, and zero emojis.
         """
         if not self.client:
             return None
@@ -81,55 +103,62 @@ class RAGCopilot:
             simplicity_instruction = ""
             if explain_simply:
                 simplicity_instruction = (
-                    "CRITICAL MODE: 'EXPLAIN SIMPLY'. Rewrite dense policy jargon into 5th-grade plain language using short sentences and clear hyphenated bullet points."
+                    "CRITICAL MODE: 'EXPLAIN SIMPLY'. Rewrite dense government jargon into 5th-grade plain language using clear mid-dot bullet points ('• ')."
                 )
 
             missing_questions_prompt = ""
             if missing_attrs:
                 missing_questions_prompt = (
                     "INTELLIGENT PROFILING INSTRUCTION:\n"
-                    "The user's query is broad or missing critical citizen criteria. Politely ask follow-up questions to gather these missing parameters:\n" +
-                    "\n".join([f"- What is your {item}?" for item in missing_attrs]) + "\n\n"
+                    "The user's query requires specific citizen details. Politely ask follow-up questions to gather these missing parameters:\n" +
+                    "\n".join([f"• What is your {item}?" for item in missing_attrs]) + "\n\n"
                 )
 
             system_prompt = (
-                "You are Sarthi, an expert AI Copilot for Indian Government Welfare Schemes.\n"
+                "You are Sarthi Benefits Copilot, an expert AI assistant for Indian Government Welfare Schemes.\n"
                 f"Respond in language code '{language}' (or match the user's input language naturally).\n"
-                "Answer the citizen's query accurately using ONLY the provided scheme context below.\n"
+                "Answer accurately using ONLY the provided scheme context below.\n"
                 f"{simplicity_instruction}\n"
                 f"{missing_questions_prompt}\n"
                 "STRICT FORMATTING RULES:\n"
                 "1. DO NOT USE ANY EMOJIS (No icons, flags, money symbols, or smileys).\n"
-                "2. Use clean markdown headers and bullet points starting with hyphen '- '.\n"
-                "3. Organize clearly with section titles and consistent line breaks.\n"
-                "4. Highlight scheme name, department, benefits, eligibility, and mandatory documents.\n"
-                "5. Always include Trust Signals (Official Source URL & Last Verified Date).\n"
-                "6. Do not invent facts outside the provided scheme context."
+                "2. Clearly bifurcate options into 'Central Govt Schemes' and 'State Govt Schemes'.\n"
+                "3. Use clean mid-dot bullet points starting with '• ' for details.\n"
+                "4. Include Scheme Name, Department, Financial Benefit, and Required Documents.\n"
+                "5. Include a brief Eligibility Summary.\n"
+                "6. Always end with Trust Signals (Official Source URL & Last Verified Date)."
             )
 
-            context_str = f"Target Scheme Name: {top_scheme.get('name')}\n"
-            context_str += f"Department: {top_scheme.get('department')}\n"
-            context_str += f"Benefit: {top_scheme.get('benefit')} ({top_scheme.get('benefitDetail')})\n"
-            context_str += f"Official Source URL: {top_scheme.get('officialUrl', 'https://myscheme.gov.in')}\n"
-            context_str += f"Last Verified Date: {top_scheme.get('lastVerified', '22 Aug 2026')}\n"
-            context_str += f"Documents Required: {', '.join(top_scheme.get('documents', []))}\n"
-            context_str += f"Eligibility Summary: {top_scheme.get('summary')}\n"
-            context_str += f"Simplified Summary: {top_scheme.get('simplifiedExplanation')}\n\n"
-            other_names = [s.get('name') for s in all_schemes[1:4] if s.get('name')]
-            context_str += f"Other Relevant Schemes: {', '.join(other_names)}"
+            context_str = "=== CENTRAL GOVERNMENT SCHEMES ===\n"
+            for cs in central_schemes[:2]:
+                context_str += f"Scheme Name: {cs.get('name')}\n"
+                context_str += f"Department: {cs.get('department')}\n"
+                context_str += f"Benefit: {cs.get('benefit')}\n"
+                context_str += f"Required Documents: {', '.join(cs.get('documents', []))}\n"
+                context_str += f"Eligibility Summary: {cs.get('summary')}\n"
+                context_str += f"Official URL: {cs.get('officialUrl')}\n\n"
+
+            context_str += "=== STATE GOVERNMENT SCHEMES ===\n"
+            for ss in state_schemes[:2]:
+                context_str += f"Scheme Name: {ss.get('name')}\n"
+                context_str += f"Department: {ss.get('department')}\n"
+                context_str += f"Benefit: {ss.get('benefit')}\n"
+                context_str += f"Required Documents: {', '.join(ss.get('documents', []))}\n"
+                context_str += f"Eligibility Summary: {ss.get('summary')}\n"
+                context_str += f"Official URL: {ss.get('officialUrl')}\n\n"
 
             chat_completion = self.client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"Scheme Context:\n{context_str}\n\nCitizen Query: {user_message}"}
+                    {"role": "user", "content": f"Government Schemes Context:\n{context_str}\n\nCitizen Query: {user_message}"}
                 ],
                 model="groq/compound-mini",
                 temperature=0.2,
-                max_tokens=500
+                max_tokens=550
             )
 
             response_text = chat_completion.choices[0].message.content
-            # Strip any residual emojis just in case
+            # Strip any residual emojis
             clean_text = re.sub(r'[\U00010000-\U0010ffff\u2600-\u26FF\u2700-\u27BF]', '', response_text)
             return clean_text.strip()
         except Exception as e:
@@ -146,25 +175,29 @@ class RAGCopilot:
     ) -> Dict[str, Any]:
         """
         Processes citizen query and returns rich RAG response with:
-        - Intelligent profiling follow-up questions if query is vague
-        - Organized, emoji-free hyphenated formatting
+        - Central Govt vs State Govt Scheme Bifurcation
+        - Intelligent Profiling Follow-up Questions (Age, Caste, State/Region, Income)
+        - Professional layout (Mid-dots '•', clean spacing, emoji-free)
         - Multilingual translation compatibility
         - Docs + CSC Locator
         - Grounded Trust Signals
         """
         missing_attrs = self.analyze_missing_profile_attributes(user_message, citizen_profile)
-        search_results = self.search_engine.search_schemes(user_message, top_k=3)
+        search_results = self.search_engine.search_schemes(user_message, top_k=6)
 
         if not search_results:
             return {
-                "reply": "Namaste. I could not find a direct policy match for your query.\n\nTo help find suitable schemes, please specify:\n- Your state of residence\n- Your age\n- Your occupation or student status\n- Your annual family income",
+                "reply": "Sarthi Benefits Copilot\n\nI could not find a direct policy match for your query.\n\nTo narrow down exact eligibility for your profile, please clarify:\n• What is your Age (or date of birth)?\n• What is your Category / Caste (General / SC / ST / OBC / EWS)?\n• What is your State of Residence / Domicile Region?\n• What is your Annual Family Household Income?",
                 "suggestedSchemes": [],
                 "citations": [],
                 "cscCenters": []
             }
 
+        bifurcated = self.bifurcate_schemes_by_level(search_results)
+        central_list = bifurcated["central"]
+        state_list = bifurcated["state"]
         top_scheme = search_results[0]
-        
+
         # CSC Locator discovery
         user_district = (citizen_profile or {}).get("district", "Ludhiana")
         user_state = (citizen_profile or {}).get("state", top_scheme.get("state", "Punjab"))
@@ -179,11 +212,11 @@ class RAGCopilot:
                 "text": criterion.get("why", "")
             })
 
-        # Attempt Groq LLM synthesis with missing profiling questions
+        # Attempt Groq LLM synthesis with Central vs State bifurcation
         groq_reply = self.generate_groq_response(
             user_message,
-            top_scheme,
-            search_results,
+            central_schemes=central_list if central_list else search_results[:2],
+            state_schemes=state_list if state_list else search_results[2:4],
             explain_simply=explain_simply,
             language=language,
             missing_attrs=missing_attrs
@@ -192,35 +225,40 @@ class RAGCopilot:
         if groq_reply:
             reply_text = groq_reply
         else:
-            # Fallback Organized Emoji-Free Response
-            if explain_simply:
-                reply_text = (
-                    f"Simplified Summary: {top_scheme['name']}\n\n"
-                    f"{top_scheme.get('simplifiedExplanation')}\n\n"
-                    f"- Financial Benefit: {top_scheme['benefit']}\n"
-                    f"- Mandatory Documents: {', '.join(top_scheme['documents'])}"
-                )
-            else:
-                reply_text = (
-                    f"Recommended Scheme: {top_scheme['name']}\n\n"
-                    f"- Department: {top_scheme['department']}\n"
-                    f"- Financial Benefit: {top_scheme['benefit']} ({top_scheme['benefitDetail']})\n"
-                    f"- Required Documents: {', '.join(top_scheme['documents'])}\n\n"
-                    f"Eligibility Summary: {top_scheme['summary']}"
-                )
+            # Fallback Structured Response matching Professional Layout
+            lines = ["Sarthi Benefits Copilot\n"]
+            
+            if central_list:
+                c = central_list[0]
+                lines.append("Central Govt Schemes:")
+                lines.append(f"Recommended Scheme: {c['name']}")
+                lines.append(f"  • Department: {c['department']}")
+                lines.append(f"  • Financial Benefit: {c['benefit']}")
+                lines.append(f"  • Required Documents: {', '.join(c['documents'])}\n")
 
-            # Append intelligent profiling questions if needed in fallback
+            if state_list:
+                s = state_list[0]
+                lines.append("State Govt Schemes:")
+                lines.append(f"Recommended Scheme: {s['name']}")
+                lines.append(f"  • Department: {s['department']}")
+                lines.append(f"  • Financial Benefit: {s['benefit']}")
+                lines.append(f"  • Required Documents: {', '.join(s['documents'])}\n")
+
+            lines.append(f"Eligibility Summary: {top_scheme['summary']}\n")
+
             if missing_attrs:
-                reply_text += "\n\nTo narrow down exact eligibility for your profile, please clarify:\n"
+                lines.append("To narrow down exact eligibility for your profile, please clarify:")
                 for item in missing_attrs:
-                    reply_text += f"- What is your {item}?\n"
+                    lines.append(f"  • What is your {item}?")
 
-        # Append Trust Signals Banner (Emoji-Free, Clean Markdown)
+            reply_text = "\n".join(lines)
+
+        # Append Trust Signals Footer Banner
         trust_signal_banner = (
             f"\n\n---\n"
-            f"- Official Source: {top_scheme.get('officialUrl', 'https://myscheme.gov.in')}\n"
-            f"- Last Verified: {top_scheme.get('lastVerified', '22 Aug 2026')}\n"
-            f"- Trust Guarantee: Grounded in official policy guidelines. Please verify at your nearest CSC before submission."
+            f"• Official Source: {top_scheme.get('officialUrl', 'https://myscheme.gov.in')}\n"
+            f"• Last Verified: {top_scheme.get('lastVerified', '22 Aug 2026')}\n"
+            f"• Trust Guarantee: Grounded in official policy guidelines. Verify at your nearest CSC before submission."
         )
 
         full_reply = reply_text + trust_signal_banner
@@ -229,6 +267,8 @@ class RAGCopilot:
             "reply": full_reply,
             "rawReply": reply_text,
             "topScheme": top_scheme,
+            "centralSchemes": central_list,
+            "stateSchemes": state_list,
             "suggestedSchemes": search_results,
             "citations": citations,
             "cscCenters": nearest_cscs,
