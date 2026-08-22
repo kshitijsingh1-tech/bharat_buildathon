@@ -7,6 +7,7 @@ from ai_pipeline.eligibility_evaluator import EligibilityEvaluator
 from ai_pipeline.rag_copilot import RAGCopilot
 from ai_pipeline.document_processor import DocumentProcessor
 from ai_pipeline.simulator_engine import SimulatorEngine
+from ai_pipeline.twilio_service import TwilioService
 
 __all__ = [
     "KnowledgeBase",
@@ -15,5 +16,6 @@ __all__ = [
     "EligibilityEvaluator",
     "RAGCopilot",
     "DocumentProcessor",
-    "SimulatorEngine"
+    "SimulatorEngine",
+    "TwilioService",
 ]

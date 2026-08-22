@@ -14,7 +14,9 @@ from backend.models.schemas import (
     DocumentAnalyzeRequest,
     FamilyPlanRequest,
     SimulationRequest,
-    SchemeSchema
+    SchemeSchema,
+    TwilioAlertRequest,
+    TwilioAlertResponse
 )
 
 from ai_pipeline import (
@@ -23,8 +25,10 @@ from ai_pipeline import (
     EligibilityEvaluator,
     RAGCopilot,
     DocumentProcessor,
-    SimulatorEngine
+    SimulatorEngine,
+    TwilioService
 )
+from fastapi import Response, Form
 
 router = APIRouter()
 
@@ -35,6 +39,7 @@ evaluator = EligibilityEvaluator(kb)
 copilot = RAGCopilot(kb, search_engine)
 doc_processor = DocumentProcessor()
 simulator = SimulatorEngine(kb, evaluator)
+twilio_service = TwilioService()
 
 
 @router.get("/schemes", response_model=List[Dict[str, Any]])
@@ -115,3 +120,33 @@ def calculate_readiness(req: EligibilityRequest):
     profile_dict = req.citizenProfile.dict()
     docs = profile_dict.get("uploadedDocuments", [])
     return simulator.compute_readiness_score(profile_dict, docs)
+
+
+@router.post("/twilio/alert", response_model=TwilioAlertResponse)
+def send_twilio_alert(req: TwilioAlertRequest):
+    """Dispatches SMS or WhatsApp scheme alert notification via Twilio."""
+    res = twilio_service.send_scheme_alert(
+        to_phone=req.phoneNumber,
+        scheme_name=req.schemeName,
+        deadline_days=req.deadlineDays,
+        is_whatsapp=req.isWhatsApp
+    )
+    return TwilioAlertResponse(
+        status=res["status"],
+        sid=res["sid"],
+        fromPhone=res["from"],
+        toPhone=res["to"],
+        body=res["body"],
+        simulated=res["simulated"]
+    )
+
+
+@router.post("/twilio/webhook")
+def twilio_incoming_webhook(Body: str = Form(""), From: str = Form("")):
+    """
+    Twilio HTTP Webhook Callback endpoint for incoming SMS/WhatsApp queries.
+    Returns XML TwiML response.
+    """
+    twiml_xml = twilio_service.process_incoming_query(incoming_body=Body, sender_number=From)
+    return Response(content=twiml_xml, media_type="application/xml")
+

@@ -100,3 +100,17 @@ class FamilyPlanRequest(BaseModel):
 class SimulationRequest(BaseModel):
     currentProfile: CitizenProfileSchema
     adjustedAttributes: Dict[str, Any]
+
+class TwilioAlertRequest(BaseModel):
+    phoneNumber: str
+    schemeName: str
+    deadlineDays: int
+    isWhatsApp: Optional[bool] = False
+
+class TwilioAlertResponse(BaseModel):
+    status: str
+    sid: str
+    fromPhone: str
+    toPhone: str
+    body: str
+    simulated: bool
