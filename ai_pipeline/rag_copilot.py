@@ -1,12 +1,13 @@
 """
-Sarthi AI Pipeline - Multilingual RAG Copilot, Central vs State Bifurcation & Intelligent Profiling
+Sarthi AI Pipeline - Multilingual Conversational RAG Copilot
 Features:
-1. Central Govt vs State Govt Scheme Bifurcation
-2. Intelligent Profiling System (Asks for Age, Caste/Category, Region/State, Household Income)
-3. Clean WhatsApp-Professional Layout (Mid-dots '•', hyphens '-', emoji-free, clean line breaks)
-4. Multilingual Translation Compatibility
-5. Docs + CSC Locator Integration
-6. Grounded Policy Verification & Trust Signals
+1. Conversational Greeting & Intent Detection (Friendly warm welcome for Hello / Hi / Namaste)
+2. Central Govt vs State Govt Scheme Bifurcation
+3. Intelligent Profiling System (Asks for Age, Caste/Category, Region/State, Household Income)
+4. Clean WhatsApp-Professional Layout (Mid-dots '•', hyphens '-', emoji-free, clean line breaks)
+5. Multilingual Translation Compatibility
+6. Docs + CSC Locator Integration
+7. Grounded Policy Verification & Trust Signals
 """
 
 import os
@@ -29,6 +30,29 @@ class RAGCopilot:
                 self.client = Groq(api_key=self.groq_api_key)
             except Exception as e:
                 print(f"[RAGCopilot Warning] Could not initialize Groq client: {e}")
+
+    def is_greeting_intent(self, user_message: str) -> bool:
+        """
+        Determines if the citizen's input is a general conversational greeting or introductory message.
+        """
+        msg = user_message.strip().lower()
+        # Remove punctuation
+        msg_clean = re.sub(r'[^\w\s]', '', msg)
+        
+        greetings = {
+            "hello", "hi", "hey", "namaste", "namaskar", "pranam",
+            "good morning", "good afternoon", "good evening", "greetings",
+            "who are you", "what is your name", "help", "start", "menu"
+        }
+
+        if msg_clean in greetings:
+            return True
+            
+        words = msg_clean.split()
+        if len(words) <= 2 and any(w in greetings for w in words):
+            return True
+
+        return False
 
     def analyze_missing_profile_attributes(self, user_message: str, citizen_profile: Optional[Dict[str, Any]]) -> List[str]:
         """
@@ -175,6 +199,7 @@ class RAGCopilot:
     ) -> Dict[str, Any]:
         """
         Processes citizen query and returns rich RAG response with:
+        - Conversational greeting detection for simple 'Hello', 'Hi', 'Namaste'
         - Central Govt vs State Govt Scheme Bifurcation
         - Intelligent Profiling Follow-up Questions (Age, Caste, State/Region, Income)
         - Professional layout (Mid-dots '•', clean spacing, emoji-free)
@@ -182,6 +207,27 @@ class RAGCopilot:
         - Docs + CSC Locator
         - Grounded Trust Signals
         """
+        # 1. Handle Conversational Greetings Intelligently
+        if self.is_greeting_intent(user_message):
+            greeting_reply = (
+                "Namaste! I am Sarthi, your AI Government Benefits Copilot.\n\n"
+                "How can I assist you today? You can ask me about:\n"
+                "• Government welfare schemes & financial assistance\n"
+                "• Student scholarships & university grants\n"
+                "• Agricultural subsidies for farmers\n"
+                "• Business loans & artisan incentives (e.g. PM Vishwakarma)\n\n"
+                "Or tell me about yourself (your State, Age, Category/Caste, or Occupation) and I will intelligently match the best Central & State schemes for you!"
+            )
+            return {
+                "reply": greeting_reply,
+                "rawReply": greeting_reply,
+                "isGreeting": True,
+                "suggestedSchemes": [],
+                "citations": [],
+                "cscCenters": []
+            }
+
+        # 2. Intelligent Profiling & Scheme Matching
         missing_attrs = self.analyze_missing_profile_attributes(user_message, citizen_profile)
         search_results = self.search_engine.search_schemes(user_message, top_k=6)
 

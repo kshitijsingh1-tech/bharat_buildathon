@@ -43,21 +43,13 @@ class TwilioService:
         response_data = self.copilot.process_query(user_message=incoming_body)
 
         answer_text = response_data.get("reply", "Namaste! Sarthi couldn't process your query. Please visit http://localhost:3000.")
-        citations = response_data.get("citations", [])
-        top_scheme = response_data.get("topScheme")
-
-        twiml_reply = f"*Sarthi Benefits Copilot*\n\n{answer_text}"
         
-        if top_scheme:
-            twiml_reply += f"\n\n- Recommended Match: {top_scheme.get('name')}\n"
-            twiml_reply += f"- Financial Benefit: {top_scheme.get('benefit')}\n"
-            twiml_reply += f"- Application Deadline: {top_scheme.get('deadlineLabel', 'Open')}"
+        # If conversational greeting, return direct greeting response
+        if response_data.get("isGreeting"):
+            return self.format_twiml_response(answer_text)
 
-        if citations:
-            c = citations[0]
-            twiml_reply += f"\n\n- Grounded Policy Source: {c.get('source', '')} ({c.get('page', '')})"
-        
-        twiml_reply += "\n\n- View Full Profile & Apply: http://localhost:3000/benefits"
+        twiml_reply = answer_text
+        twiml_reply += "\n\n• View Full Profile & Apply: http://localhost:3000/benefits"
         return self.format_twiml_response(twiml_reply)
 
     def handle_incoming_message(self, incoming_body: str, from_number: str = "") -> str:
