@@ -60,6 +60,10 @@ class TwilioService:
         twiml_reply += "\n\n🌐 *View Full Profile & Apply:* http://localhost:3000/benefits"
         return self.format_twiml_response(twiml_reply)
 
+    def handle_incoming_message(self, incoming_body: str, from_number: str = "") -> str:
+        """Alias for process_incoming_query."""
+        return self.process_incoming_query(incoming_body, from_number)
+
     def send_scheme_alert(self, to_phone: str, scheme_name: str, deadline_days: int, is_whatsapp: bool = False) -> Dict[str, Any]:
         """
         Dispatches outbound SMS/WhatsApp notification for scheme deadlines or eligibility match.

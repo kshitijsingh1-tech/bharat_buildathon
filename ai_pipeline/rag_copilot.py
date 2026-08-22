@@ -72,7 +72,8 @@ class RAGCopilot:
             context_str += f"Documents Required: {', '.join(top_scheme.get('documents', []))}\n"
             context_str += f"Eligibility Summary: {top_scheme.get('summary')}\n"
             context_str += f"Simplified Summary: {top_scheme.get('simplifiedExplanation')}\n\n"
-            context_str += f"Other Relevant Schemes: {', '.join([s.get('name') for s in all_schemes[1:]])}"
+            other_names = [s.get('name') for s in all_schemes[1:4] if s.get('name')]
+            context_str += f"Other Relevant Schemes: {', '.join(other_names)}"
 
             chat_completion = self.client.chat.completions.create(
                 messages=[
